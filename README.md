@@ -198,8 +198,14 @@ Access `/config` endpoint to manage blocked patterns:
 ```
 
 ### Health Checks:
+
+#### Local:
 - SAGE AI: `http://localhost:8540/api/feed`
 - XSCRAPER: `http://localhost:8509/api/feed`
+
+#### Production (AWS):
+- SAGE AI: `http://44.225.226.126:8540/api/feed`
+- XSCRAPER: `http://44.225.226.126:8509/api/feed`
 
 ## 📝 API Documentation
 
@@ -284,13 +290,19 @@ This project is proprietary software. All rights reserved.
 - GitHub: [@prcodex](https://github.com/prcodex)
 - Repository: [Argus](https://github.com/prcodex/Argus)
 
+## 🌐 Production Server
+
+**AWS Elastic IP**: `44.225.226.126` (Permanent - will not change)
+- **SAGE AI**: http://44.225.226.126:8540
+- **XSCRAPER**: http://44.225.226.126:8509
+
 ## 🙏 Acknowledgments
 
 - Anthropic for Claude AI
 - Apify for web scraping
-- AWS for infrastructure
+- AWS for infrastructure  
 - LanceDB for vector storage
 
 ---
-*Last Updated: October 2025*
-*Version: 1.0.0*
+*Last Updated: October 13, 2025*
+*Version: 1.0.1*

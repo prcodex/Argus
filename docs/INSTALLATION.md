@@ -4,6 +4,7 @@
 - Python 3.8 or higher
 - AWS account with S3 access
 - API keys for Anthropic and Apify
+- Gmail App Password for email fetching
 
 ## Step 1: Clone Repository
 ```bash
@@ -37,8 +38,15 @@ python scripts/init_database.py
 ```
 
 ## Step 6: Access Interfaces
+
+### Local Development:
 - SAGE AI: http://localhost:8540
 - XSCRAPER: http://localhost:8509
+
+### Production Server (AWS):
+- SAGE AI: http://44.225.226.126:8540
+- XSCRAPER: http://44.225.226.126:8509
+- Server IP: 44.225.226.126 (Elastic IP - Permanent)
 
 ## Troubleshooting
 See docs/TROUBLESHOOTING.md for common issues.
