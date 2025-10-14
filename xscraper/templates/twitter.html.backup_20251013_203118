@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSCRAPER - Live Feed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #15202b;
+            color: #fff;
+            line-height: 1.4;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border-left: 1px solid #38444d;
+            border-right: 1px solid #38444d;
+            min-height: 100vh;
+            background-color: #192734;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #38444d;
+            position: sticky;
+            top: 0;
+            background-color: #192734;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .stats {
+            font-size: 13px;
+            color: #8899a6;
+            margin-top: 5px;
+        }
+        
+        .tweet {
+            padding: 12px 20px;
+            border-bottom: 1px solid #38444d;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .tweet:hover {
+            background-color: #1e2732;
+        }
+        
+        .tweet-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .tweet-meta {
+            flex-grow: 1;
+        }
+        
+        .username {
+            font-weight: 700;
+            color: #fff;
+            margin-right: 5px;
+        }
+        
+        .handle {
+            color: #8899a6;
+            font-size: 14px;
+        }
+        
+        .time {
+            color: #8899a6;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        
+        .tweet-content {
+            margin-left: 58px;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+        
+        .tweet-content a {
+            color: #1d9bf0;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .tweet-content a:hover {
+            text-decoration: underline;
+            color: #4a9eff;
+        }
+        
+        .tweet-footer {
+            margin-left: 58px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .rating-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid #38444d;
+        }
+        
+        .rating-group:hover {
+            border-color: #1d9bf0;
+        }
+        
+        .rating-mini {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .star {
+            cursor: pointer;
+            color: #38444d;
+            transition: color 0.2s;
+            font-size: 13px;
+        }
+        
+        .star:hover,
+        .star.active {
+            color: #ffd700;
+        }
+        
+        .user-rating-input {
+            width: 35px;
+            background: transparent;
+            border: none;
+            color: #fff;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .user-rating-input:focus {
+            outline: none;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        .save-btn {
+            background: none;
+            border: none;
+            color: #1d9bf0;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover {
+            background: rgba(29, 155, 240, 0.1);
+        }
+        
+        .save-btn.saved {
+            color: #00ba7c;
+        }
+        
+        .ai-score {
+            background: rgba(29, 155, 240, 0.1);
+            color: #1d9bf0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .user-score {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .keywords {
+            margin-left: 58px;
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .keyword {
+            background: rgba(29, 155, 240, 0.1);
+            color: #1d9bf0;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+        }
+        
+        .sentiment {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 5px;
+        }
+        
+        .sentiment-positive {
+            background: rgba(0, 186, 124, 0.15);
+            color: #00ba7c;
+        }
+        
+        .sentiment-negative {
+            background: rgba(244, 33, 46, 0.15);
+            color: #f4212e;
+        }
+        
+        .sentiment-neutral {
+            background: rgba(136, 153, 166, 0.15);
+            color: #8899a6;
+        }
+        
+        .sentiment-slightly_positive {
+            background: rgba(0, 186, 124, 0.1);
+            color: #17bf63;
+        }
+        
+        .sentiment-slightly_negative {
+            background: rgba(244, 33, 46, 0.1);
+            color: #f91880;
+        }
+        
+        .load-more {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #38444d;
+        }
+        
+        .load-more button {
+            background: none;
+            color: #1d9bf0;
+            border: 1px solid #38444d;
+            padding: 10px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background-color 0.2s;
+        }
+        
+        .load-more button:hover {
+            background-color: rgba(29, 155, 240, 0.1);
+        }
+        
+        .news-indicator {
+            background: #794bc4;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        
+        .action-button {
+            background: none;
+            border: none;
+            color: #8899a6;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        
+        .action-button:hover {
+            background-color: rgba(29, 155, 240, 0.1);
+            color: #1d9bf0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ XSCRAPER Feed</h1>
+            <div class="stats">Showing <span id="showing">{{ initial_items|length }}</span> of <span id="total">{{ total }}</span> items • Live updates every 15 min</div>
+        </div>
+        
+        <div id="feed">
+            <!-- Items will be rendered here -->
+        </div>
+        
+        <div class="load-more">
+            <button onclick="loadMore()" id="loadMoreBtn">Show more tweets</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentPage = 1;
+        let isLoading = false;
+        let totalItems = {{ total }};
+        let initialItems = {{ initial_items | tojson }};
+        
+        // Render initial items
+        document.addEventListener('DOMContentLoaded', function() {
+            renderItems(initialItems);
+        });
+        
+        function renderItems(items) {
+            const feed = document.getElementById('feed');
+            
+            items.forEach(item => {
+                const tweet = createTweetElement(item);
+                feed.appendChild(tweet);
+            });
+            
+            setupInteractions();
+        }
+        
+        function createTweetElement(item) {
+            const div = document.createElement('div');
+            div.className = 'tweet';
+            div.dataset.id = item.id;
+            
+            const typeIcon = item.type === 'tweet' ? '🐦' : '📰';
+            const hasUserRating = item.user_rating !== null && item.user_rating !== undefined;
+            const scoreClass = hasUserRating ? 'user-score' : 'ai-score';
+            const scoreIcon = hasUserRating ? '👤' : '🤖';
+            const scoreValue = hasUserRating ? item.user_rating : item.ai_score;
+            const newsTag = item.type === 'news' ? '<span class="news-indicator">NEWS</span>' : '';
+            
+            // Sentiment display
+            const sentiment = item.sentiment || 'neutral';
+            const sentimentClass = `sentiment sentiment-${sentiment.replace(/_/g, '_')}`;
+            const sentimentEmoji = {
+                'positive': '📈',
+                'negative': '📉',
+                'neutral': '➖',
+                'slightly_positive': '↗️',
+                'slightly_negative': '↘️'
+            }[sentiment] || '➖';
+            const sentimentLabel = sentiment.replace(/_/g, ' ');
+            
+            // Debug log for first few items
+            if (document.querySelectorAll('.tweet').length < 3) {
+                console.log('Item timestamp data:', {
+                    id: item.id,
+                    time_ago: item.time_ago,
+                    created_at: item.created_at,
+                    created_at_et: item.created_at_et
+                });
+            }
+            
+            // Calculate star display
+            const userRating = hasUserRating ? item.user_rating : 0;
+            const starCount = Math.ceil(userRating / 2);
+            
+            div.innerHTML = `
+                <div class="tweet-header">
+                    <div class="avatar">${typeIcon}</div>
+                    <div class="tweet-meta">
+                        <span class="username">${escapeHtml(item.username)}</span>
+                        <span class="handle">@${escapeHtml(item.username)}</span>
+                        ${newsTag}
+                        <span class="time">• ${item.time_ago || 'recent'}</span>
+                        <span class="${sentimentClass}">${sentimentEmoji} ${sentimentLabel}</span>
+                    </div>
+                    <div class="${scoreClass}">${scoreIcon} ${scoreValue}/10</div>
+                </div>
+                <div class="tweet-content">${linkifyText(item.text || '')}</div>
+                <div class="tweet-footer">
+                    <div class="rating-group">
+                        <div class="rating-mini">
+                            ${[1,2,3,4,5].map(i => 
+                                `<span class="star ${i <= starCount ? 'active' : ''}">${i <= starCount ? '⭐' : '☆'}</span>`
+                            ).join('')}
+                        </div>
+                        <input type="number" class="user-rating-input" min="0" max="10" step="0.5" value="${userRating}" />
+                        <button class="save-btn ${hasUserRating ? 'saved' : ''}">${hasUserRating ? '✅' : '💾'}</button>
+                    </div>
+                    <div class="action-button">
+                        💬 <span>${Math.floor(Math.random() * 50)}</span>
+                    </div>
+                    <div class="action-button">
+                        🔄 <span>${Math.floor(Math.random() * 100)}</span>
+                    </div>
+                    <div class="action-button">
+                        ❤️ <span>${Math.floor(Math.random() * 200)}</span>
+                    </div>
+                </div>
+                <div class="keywords">
+                    ${(item.keywords_list || []).map(kw => 
+                        `<span class="keyword">${escapeHtml(kw)}</span>`
+                    ).join('')}
+                    ${item.category ? `<span class="keyword">${escapeHtml(item.category)}</span>` : ''}
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        function setupInteractions() {
+            document.querySelectorAll('.tweet').forEach(tweet => {
+                // Skip if already has listeners
+                if (tweet.dataset.listeners === 'true') return;
+                tweet.dataset.listeners = 'true';
+                
+                const ratingGroup = tweet.querySelector('.rating-group');
+                if (!ratingGroup) return;
+                
+                const stars = ratingGroup.querySelectorAll('.star');
+                const input = ratingGroup.querySelector('.user-rating-input');
+                const saveBtn = ratingGroup.querySelector('.save-btn');
+                const itemId = tweet.dataset.id;
+                
+                // Star click interaction
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const rating = (index + 1) * 2;
+                        updateRating(stars, input, rating);
+                    });
+                });
+                
+                // Input change interaction
+                input.addEventListener('input', function() {
+                    const value = parseFloat(this.value) || 0;
+                    const starCount = Math.ceil(value / 2);
+                    updateStars(stars, starCount);
+                });
+                
+                // Save button interaction
+                saveBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const rating = parseFloat(input.value) || 0;
+                    
+                    // Save to backend
+                    fetch('/api/rate', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({item_id: itemId, rating: rating})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Visual feedback
+                            this.textContent = '✅';
+                            this.classList.add('saved');
+                            
+                            // Update score badge
+                            const scoreBadge = tweet.querySelector('.ai-score, .user-score');
+                            if (scoreBadge) {
+                                scoreBadge.className = 'user-score';
+                                scoreBadge.textContent = `👤 ${rating}/10`;
+                            }
+                            
+                            // Reset button after 2 seconds
+                            setTimeout(() => {
+                                this.textContent = '💾';
+                            }, 2000);
+                        }
+                    });
+                });
+                
+                // Tweet click for expansion effect
+                tweet.addEventListener('click', function(e) {
+                    if (!e.target.closest('.rating-group') && 
+                        !e.target.closest('.action-button')) {
+                        this.style.backgroundColor = '#1e2732';
+                        setTimeout(() => {
+                            this.style.backgroundColor = '';
+                        }, 200);
+                    }
+                });
+            });
+        }
+        
+        function updateRating(stars, input, rating) {
+            const starCount = Math.ceil(rating / 2);
+            updateStars(stars, starCount);
+            input.value = rating;
+        }
+        
+        function updateStars(stars, count) {
+            stars.forEach((star, i) => {
+                if (i < count) {
+                    star.classList.add('active');
+                    star.textContent = '⭐';
+                } else {
+                    star.classList.remove('active');
+                    star.textContent = '☆';
+                }
+            });
+        }
+        
+        function loadMore() {
+            if (isLoading) return;
+            isLoading = true;
+            
+            const btn = document.getElementById('loadMoreBtn');
+            btn.disabled = true;
+            btn.textContent = 'Loading...';
+            
+            fetch(`/api/feed?page=${currentPage + 1}`)
+                .then(response => response.json())
+                .then(data => {
+                    currentPage++;
+                    renderItems(data.items);
+                    
+                    // Update stats
+                    const showing = Math.min(currentPage * 50, totalItems);
+                    document.getElementById('showing').textContent = showing;
+                    
+                    if (!data.has_more) {
+                        btn.style.display = 'none';
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Show more tweets';
+                    }
+                    
+                    isLoading = false;
+                })
+                .catch(error => {
+                    console.error('Error loading more:', error);
+                    btn.disabled = false;
+                    btn.textContent = 'Try again';
+                    isLoading = false;
+                });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function linkifyText(text) {
+            // First escape HTML for security
+            const escaped = escapeHtml(text);
+            
+            // Then convert URLs to clickable links
+            // Matches http://, https://, and www. URLs
+            const urlPattern = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+            
+            return escaped.replace(urlPattern, function(url) {
+                // Add protocol if missing (for www. URLs)
+                let href = url;
+                if (url.startsWith('www.')) {
+                    href = 'http://' + url;
+                }
+                
+                // Create clickable link that opens in new window
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${url}</a>`;
+            });
+        }
+    </script>
+</body>
+</html>

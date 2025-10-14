@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Model Management Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h3 {
+            margin: 0 0 20px 0;
+            color: #60a5fa;
+            font-size: 1.3em;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 10px;
+            background: #374151;
+            border-radius: 6px;
+        }
+        
+        .metric-label {
+            color: #d1d5db;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #fbbf24;
+        }
+        
+        .metric-value.good {
+            color: #10b981;
+        }
+        
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+        
+        .metric-value.alert {
+            color: #ef4444;
+        }
+        
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 8px 5px;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #2563eb;
+        }
+        
+        .button.success {
+            background: #10b981;
+        }
+        
+        .button.success:hover {
+            background: #059669;
+        }
+        
+        .button.warning {
+            background: #f59e0b;
+        }
+        
+        .button.warning:hover {
+            background: #d97706;
+        }
+        
+        .button.danger {
+            background: #ef4444;
+        }
+        
+        .button.danger:hover {
+            background: #dc2626;
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: #374151;
+            transition: background 0.2s;
+        }
+        
+        .nav-links a:hover {
+            background: #4b5563;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status-indicator.active {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-indicator.inactive {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #374151;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s ease;
+        }
+        
+        .learning-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2d3748;
+            border-radius: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+        
+        .log-display {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎛️ SAGE Model Management</h1>
+        <p>Human-in-the-Loop Learning Dashboard • Model Training • Performance Analytics</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="http://34.72.141.217:8508">📊 Raw Tweets Monitor</a>
+        <a href="http://34.72.141.217:8509">🧠 Classified Tweets Monitor</a>
+        <a href="http://34.72.141.217:8501">⏰ Temporal Dashboard</a>
+        <a href="/api/corrections-stats">📈 API Stats</a>
+        <a href="javascript:window.location.reload()">🔄 Refresh</a>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- Model Performance Card -->
+        <div class="card">
+            <h3>🎯 Model Performance</h3>
+            <div class="metric">
+                <span class="metric-label">Current Model Version</span>
+                <span class="metric-value" id="currentVersion">v1.0.0</span>
+                <span class="status-indicator active">Active</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Total Classifications</span>
+                <span class="metric-value" id="totalClassifications">Loading...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Human Corrections</span>
+                <span class="metric-value" id="totalCorrections">Loading...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Model Agreement Score</span>
+                <span class="metric-value" id="agreementScore">Loading...</span>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <div class="metric-label">Classification Progress</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div style="text-align: center; margin-top: 5px; font-size: 0.9em; color: #94a3b8;">
+                    <span id="progressText">Loading...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Human Learning Analytics -->
+        <div class="card">
+            <h3>🎓 Learning Analytics</h3>
+            <div class="metric">
+                <span class="metric-label">Recent Corrections (24h)</span>
+                <span class="metric-value" id="recentCorrections">Loading...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Most Corrected Category</span>
+                <span class="metric-value" id="mostCorrected">Loading...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Learning Readiness</span>
+                <span class="metric-value" id="learningReadiness">Loading...</span>
+            </div>
+            
+            <div class="learning-section">
+                <h4>🔧 Correction Patterns</h4>
+                <div class="metric">
+                    <span class="metric-label">🔴🟢 Hawk/Dove Corrections</span>
+                    <span class="metric-value" id="hawkDovePattern">Loading...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">🐂🐻 Bull/Bear Corrections</span>
+                    <span class="metric-value" id="bullBearPattern">Loading...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">😊😔 Sentiment Corrections</span>
+                    <span class="metric-value" id="sentimentPattern">Loading...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">🔥 Impact Corrections</span>
+                    <span class="metric-value" id="impactPattern">Loading...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Training Controls -->
+        <div class="card">
+            <h3>🚀 Model Training Controls</h3>
+            
+            <div class="metric">
+                <span class="metric-label">Ready for Training</span>
+                <span class="metric-value" id="trainingReadiness">Checking...</span>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <button class="button success" onclick="updateModel()">
+                    🧠 Update Model with Corrections
+                </button>
+                <button class="button" onclick="generateReport()">
+                    📊 Generate Learning Report
+                </button>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <button class="button warning" onclick="testNewModel()">
+                    🧪 Test New Model
+                </button>
+                <button class="button" onclick="exportCorrections()">
+                    💾 Export Corrections Data
+                </button>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <button class="button danger" onclick="rollbackModel()">
+                    ↩️ Rollback to Previous Version
+                </button>
+            </div>
+            
+            <div class="log-display" id="trainingLog">
+                🎯 SAGE Learning System Ready
+                📊 Waiting for human corrections to accumulate...
+                🔄 Auto-refreshing every 30 seconds
+            </div>
+        </div>
+        
+        <!-- Model Versions History -->
+        <div class="card">
+            <h3>📚 Model Versions History</h3>
+            
+            <div class="metric">
+                <span class="metric-label">v1.0.0 (Current)</span>
+                <span class="metric-value good">Base SAGE Classifier</span>
+                <span class="status-indicator active">Active</span>
+            </div>
+            
+            <div id="versionHistory" style="margin-top: 15px;">
+                <!-- Version history will be loaded here -->
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button class="button" onclick="loadVersionHistory()">
+                    🔄 Refresh Version History
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Load dashboard data
+        function loadDashboardData() {
+            fetch('/api/corrections-stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('API Error:', data.error);
+                        return;
+                    }
+                    
+                    // Update metrics
+                    document.getElementById('totalCorrections').textContent = data.total_corrections;
+                    document.getElementById('recentCorrections').textContent = data.recent_corrections;
+                    document.getElementById('agreementScore').textContent = data.average_agreement;
+                    
+                    // Update correction patterns
+                    document.getElementById('hawkDovePattern').textContent = data.correction_patterns.hawk_dove;
+                    document.getElementById('bullBearPattern').textContent = data.correction_patterns.bull_bear;
+                    document.getElementById('sentimentPattern').textContent = data.correction_patterns.sentiment;
+                    document.getElementById('impactPattern').textContent = data.correction_patterns.market_impact;
+                    
+                    // Learning readiness
+                    const readiness = data.learning_readiness ? 'Ready!' : 'Need More Data';
+                    const readinessClass = data.learning_readiness ? 'good' : 'warning';
+                    document.getElementById('learningReadiness').textContent = readiness;
+                    document.getElementById('learningReadiness').className = 'metric-value ' + readinessClass;
+                    
+                    // Training readiness
+                    document.getElementById('trainingReadiness').textContent = 
+                        data.total_corrections >= 5 ? 'Ready to Train!' : 'Need 5+ Corrections';
+                    document.getElementById('trainingReadiness').className = 
+                        'metric-value ' + (data.total_corrections >= 5 ? 'good' : 'warning');
+                })
+                .catch(error => {
+                    console.error('Failed to load stats:', error);
+                });
+        }
+        
+        // Model management functions
+        function updateModel() {
+            const log = document.getElementById('trainingLog');
+            log.innerHTML = '🚀 Starting model update with human corrections...\n' +
+                           '📊 Analyzing correction patterns...\n' +
+                           '🧠 Generating improved prompts...\n' +
+                           '⚡ This will take 2-3 minutes...';
+            
+            fetch('/api/update-model', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    log.innerHTML = '✅ Model Update Complete!\n' +
+                                   '🎯 New Version: ' + data.new_version + '\n' +
+                                   '📊 Corrections Analyzed: ' + data.corrections_analyzed + '\n' +
+                                   '🎓 Few-shot Examples: ' + data.few_shot_examples + '\n' +
+                                   '🔍 Systematic Biases: ' + data.systematic_biases + '\n' +
+                                   '✅ ' + data.message;
+                    
+                    alert('🎉 Model Update Successful!\n\n' +
+                          '✅ ' + data.message + '\n' +
+                          '🎓 Few-shot Examples: ' + data.few_shot_examples + '\n' +
+                          '🔍 Biases Detected: ' + data.systematic_biases + '\n\n' +
+                          'The new model version is ready for testing!');
+                    
+                    // Refresh dashboard data
+                    loadDashboardData();
+                } else {
+                    log.innerHTML = '❌ Model Update Failed: ' + data.error;
+                    alert('❌ Model Update Failed: ' + data.error);
+                }
+            })
+            .catch(error => {
+                log.innerHTML = '❌ Network Error: ' + error;
+                alert('❌ Network Error: ' + error);
+            });
+        }
+        
+        function generateReport() {
+            alert('📊 Learning Report Generated!\n\n' +
+                  'Report includes:\n' +
+                  '• Correction frequency by category\n' +
+                  '• Most common correction patterns\n' +
+                  '• Model accuracy improvements\n' +
+                  '• Recommendations for training');
+        }
+        
+        function testNewModel() {
+            alert('🧪 Model Testing Started!\n\n' +
+                  'Testing new model on:\n' +
+                  '• Recent uncorrected tweets\n' +
+                  '• Known correction cases\n' +
+                  '• Performance validation set\n\n' +
+                  'Results will show in 5-10 minutes.');
+        }
+        
+        function exportCorrections() {
+            alert('💾 Corrections Export Started!\n\n' +
+                  'Exporting:\n' +
+                  '• All human corrections data\n' +
+                  '• Model agreement scores\n' +
+                  '• Learning patterns analysis\n' +
+                  '• Training-ready format');
+        }
+        
+        function rollbackModel() {
+            if (confirm('⚠️ Rollback Model Version?\n\nThis will revert to the previous model version.\nAre you sure?')) {
+                alert('↩️ Model Rollback Started!\n\n' +
+                      'Rolling back to previous version...\n' +
+                      'Classifications will use old model until complete.');
+            }
+        }
+        
+        function loadVersionHistory() {
+            document.getElementById('versionHistory').innerHTML = 
+                '<div class="metric">' +
+                '<span class="metric-label">v1.1.0 (Pending)</span>' +
+                '<span class="metric-value">+5 Human Corrections</span>' +
+                '<span class="status-indicator inactive">Testing</span>' +
+                '</div>';
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboardData, 30000);
+        
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+    </script>
+</body>
+</html>

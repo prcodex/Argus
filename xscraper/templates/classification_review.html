@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Classification Review - All Tweets</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0f1c;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .review-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .window-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .window-header {
+            background: linear-gradient(90deg, #374151, #4b5563);
+            padding: 15px 20px;
+            border-bottom: 1px solid #4b5563;
+        }
+        
+        .window-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .window-meta {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .tweet-review-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .tweet-review-item:hover {
+            background: #2d3748;
+            transform: translateX(5px);
+        }
+        
+        .tweet-review-item:last-child {
+            border-bottom: none;
+        }
+        
+        .tweet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .tweet-author {
+            font-weight: 600;
+            color: #60a5fa;
+        }
+        
+        .tweet-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        .tweet-text {
+            margin-bottom: 12px;
+            font-size: 1.05em;
+            padding: 10px;
+            background: #374151;
+            border-radius: 6px;
+            border-left: 3px solid #60a5fa;
+        }
+        
+        .classification-summary {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .classification-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        
+        .hawk { background: #dc2626; color: white; }
+        .dove { background: #16a34a; color: white; }
+        .bull { background: #0d9488; color: white; }
+        .bear { background: #b91c1c; color: white; }
+        .neutral { background: #6b7280; color: white; }
+        .positive { background: #059669; color: white; }
+        .negative { background: #dc2626; color: white; }
+        .high-impact { background: #f59e0b; color: white; }
+        .medium-impact { background: #eab308; color: black; }
+        .low-impact { background: #71717a; color: white; }
+        
+        .confidence-indicator {
+            font-size: 0.75em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #4b5563;
+            color: #cbd5e1;
+        }
+        
+        .click-hint {
+            font-size: 0.8em;
+            color: #94a3b8;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .engagement-mini {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-left: 15px;
+        }
+        
+        .filter-section {
+            background: #374151;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-section select {
+            padding: 6px 10px;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            background: #1e293b;
+            color: #e0e6ed;
+        }
+        
+        .stats-summary {
+            background: #1e293b;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 SAGE Classification Review</h1>
+        <p>Review Model Classifications • Click Tweet to Correct • Last 4 Windows (2 Hours)</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">📊 Timeline</a>
+        <a href="/review">🔍 Review All</a>
+        <a href="/api/performance">📈 Performance</a>
+    </div>
+    
+    <div class="review-container">
+        <!-- Summary Statistics -->
+        <div class="stats-summary">
+            <div class="stat-item">
+                <div class="stat-value">{{ total_tweets }}</div>
+                <div class="stat-label">Total Tweets</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ windows|length }}</div>
+                <div class="stat-label">Windows</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ "%.1f"|format(avg_confidence * 100) }}%</div>
+                <div class="stat-label">Avg Confidence</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ human_corrections }}</div>
+                <div class="stat-label">Your Corrections</div>
+            </div>
+        </div>
+        
+        <!-- Filter Options -->
+        <div class="filter-section">
+            <label>Filter by:</label>
+            <select onchange="filterTweets(this.value)">
+                <option value="all">All Classifications</option>
+                <option value="low-confidence">Low Confidence Only</option>
+                <option value="hawk">Hawks Only</option>
+                <option value="dove">Doves Only</option>
+                <option value="bull">Bulls Only</option>
+                <option value="bear">Bears Only</option>
+                <option value="high-impact">High Impact Only</option>
+            </select>
+            
+            <select onchange="sortTweets(this.value)">
+                <option value="time">Sort by Time</option>
+                <option value="confidence">Sort by Confidence</option>
+                <option value="relevance">Sort by Relevance</option>
+                <option value="impact">Sort by Market Impact</option>
+            </select>
+        </div>
+        
+        <!-- Windows with Tweets -->
+        {% for window in windows %}
+        <div class="window-section">
+            <div class="window-header">
+                <div class="window-title">
+                    🕒 {{ window.start_time_display }} - {{ window.end_time_display }}
+                </div>
+                <div class="window-meta">
+                    📝 {{ window.total_tweets }} tweets • 🧠 {{ window.classified_tweets }} classified
+                    {% if window.human_corrections > 0 %}
+                        • 🎓 {{ window.human_corrections }} corrected by you
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% for tweet in window.all_tweets %}
+            <div class="tweet-review-item" onclick="reviewTweet('{{ tweet.tweet_id }}')">
+                <div class="tweet-header">
+                    <div class="tweet-author">@{{ tweet.author }}</div>
+                    <div class="tweet-time">{{ tweet.created_at_et }}</div>
+                </div>
+                
+                <div class="tweet-text">{{ tweet.text }}</div>
+                
+                <div class="classification-summary">
+                    {% set class = tweet.active_classifications %}
+                    
+                    <!-- Current Classifications -->
+                    {% if class.hawk_dove > 0.1 %}
+                        <span class="classification-badge hawk">Hawk {{ "%.1f"|format(class.hawk_dove) }}</span>
+                    {% elif class.hawk_dove < -0.1 %}
+                        <span class="classification-badge dove">Dove {{ "%.1f"|format(class.hawk_dove) }}</span>
+                    {% else %}
+                        <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.hawk_dove) }}</span>
+                    {% endif %}
+                    
+                    {% if class.bull_bear > 0.1 %}
+                        <span class="classification-badge bull">Bull {{ "%.1f"|format(class.bull_bear) }}</span>
+                    {% elif class.bull_bear < -0.1 %}
+                        <span class="classification-badge bear">Bear {{ "%.1f"|format(class.bull_bear) }}</span>
+                    {% else %}
+                        <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.bull_bear) }}</span>
+                    {% endif %}
+                    
+                    {% if class.sentiment > 0.1 %}
+                        <span class="classification-badge positive">Positive {{ "%.1f"|format(class.sentiment) }}</span>
+                    {% elif class.sentiment < -0.1 %}
+                        <span class="classification-badge negative">Negative {{ "%.1f"|format(class.sentiment) }}</span>
+                    {% else %}
+                        <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.sentiment) }}</span>
+                    {% endif %}
+                    
+                    {% if class.market_impact > 0.7 %}
+                        <span class="classification-badge high-impact">High {{ "%.1f"|format(class.market_impact) }}</span>
+                    {% elif class.market_impact > 0.3 %}
+                        <span class="classification-badge medium-impact">Medium {{ "%.1f"|format(class.market_impact) }}</span>
+                    {% else %}
+                        <span class="classification-badge low-impact">Low {{ "%.1f"|format(class.market_impact) }}</span>
+                    {% endif %}
+                    
+                    <!-- Confidence and source -->
+                    <span class="confidence-indicator">
+                        {% if tweet.model_predictions %}
+                            {{ "%.0f"|format(tweet.model_predictions.confidence * 100) }}% confident
+                        {% endif %}
+                    </span>
+                    
+                    {% if class.source == 'human' %}
+                        <span class="classification-badge" style="background: #10b981;">✓ You Corrected</span>
+                    {% endif %}
+                    
+                    <!-- Engagement info -->
+                    <span class="engagement-mini">
+                        ❤️{{ tweet.engagement.get('like_count', 0) }} 
+                        🔄{{ tweet.engagement.get('retweet_count', 0) }}
+                    </span>
+                    
+                    <!-- Click hint -->
+                    <div class="click-hint">
+                        {% if class.source == 'human' %}
+                            👁️ Review your correction
+                        {% else %}
+                            👆 Click to correct
+                        {% endif %}
+                        →
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        function reviewTweet(tweetId) {
+            // Navigate to individual tweet correction page
+            window.location.href = `/learning/${tweetId}`;
+        }
+        
+        function filterTweets(filterType) {
+            // TODO: Implement client-side filtering
+            const items = document.querySelectorAll('.tweet-review-item');
+            
+            items.forEach(item => {
+                const badges = item.querySelectorAll('.classification-badge');
+                let show = true;
+                
+                switch(filterType) {
+                    case 'low-confidence':
+                        const confidence = item.querySelector('.confidence-indicator');
+                        if (confidence) {
+                            const confValue = parseInt(confidence.textContent);
+                            show = confValue < 70;
+                        }
+                        break;
+                    case 'hawk':
+                        show = Array.from(badges).some(badge => badge.textContent.includes('Hawk'));
+                        break;
+                    case 'dove':
+                        show = Array.from(badges).some(badge => badge.textContent.includes('Dove'));
+                        break;
+                    case 'bull':
+                        show = Array.from(badges).some(badge => badge.textContent.includes('Bull'));
+                        break;
+                    case 'bear':
+                        show = Array.from(badges).some(badge => badge.textContent.includes('Bear'));
+                        break;
+                    case 'high-impact':
+                        show = Array.from(badges).some(badge => badge.textContent.includes('High'));
+                        break;
+                    default:
+                        show = true;
+                }
+                
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+        
+        function sortTweets(sortType) {
+            // TODO: Implement client-side sorting if needed
+            console.log('Sorting by:', sortType);
+        }
+    </script>
+</body>
+</html>

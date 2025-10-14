@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Economic Intelligence Timeline</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0f1c;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .timeline-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .window-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+        
+        .window-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        .window-header {
+            background: linear-gradient(90deg, #374151, #4b5563);
+            padding: 15px 20px;
+            border-bottom: 1px solid #4b5563;
+        }
+        
+        .window-time {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+        
+        .window-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .tweet-card {
+            padding: 15px 20px;
+            border-bottom: 1px solid #334155;
+            transition: background-color 0.2s ease;
+        }
+        
+        .tweet-card:hover {
+            background: #2d3748;
+        }
+        
+        .tweet-card:last-child {
+            border-bottom: none;
+        }
+        
+        .tweet-author {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .tweet-text {
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+        
+        .tweet-classifications {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .classification-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .hawk { background: #dc2626; color: white; }
+        .dove { background: #16a34a; color: white; }
+        .bull { background: #0d9488; color: white; }
+        .bear { background: #b91c1c; color: white; }
+        .neutral { background: #6b7280; color: white; }
+        .positive { background: #059669; color: white; }
+        .negative { background: #dc2626; color: white; }
+        .high-impact { background: #f59e0b; color: white; }
+        .medium-impact { background: #eab308; color: black; }
+        .low-impact { background: #71717a; color: white; }
+        
+        .source-indicator {
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+        
+        .model-source { background: #3b82f6; color: white; }
+        .human-source { background: #10b981; color: white; }
+        
+        .tweet-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        .engagement-stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .expand-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 15px 20px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .expand-button:hover {
+            background: #2563eb;
+        }
+        
+        .filters {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        
+        .filter-group select, .filter-group input {
+            padding: 6px 10px;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            background: #374151;
+            color: #e0e6ed;
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .auto-update {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #374151;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            border: 1px solid #4b5563;
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 SAGE Economic Intelligence Timeline</h1>
+        <p>Rolling 30-Minute Windows • Dual Model/Human Classifications • Live Economic Intelligence</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">📊 Timeline</a>
+        <a href="/learning">🎓 Learning Interface</a>
+        <a href="/api/performance">📈 Performance</a>
+    </div>
+    
+    <div class="timeline-container">
+        <!-- Auto-updating windows container -->
+        <div id="windows-container" 
+             hx-get="/api/windows" 
+             hx-trigger="every 1800s"
+             hx-swap="innerHTML">
+            {% include 'windows_partial.html' %}
+        </div>
+    </div>
+    
+    <div class="auto-update">
+        🔄 Auto-updates every 30 minutes when classification completes
+    </div>
+    
+    <script>
+        // Handle window expansion
+        function toggleWindow(windowId) {
+            const expandDiv = document.getElementById('expand-' + windowId);
+            const button = document.getElementById('btn-' + windowId);
+            
+            if (expandDiv.classList.contains('hidden')) {
+                // Load expanded tweets
+                fetch(`/api/window/${windowId}/tweets`)
+                    .then(response => response.text())
+                    .then(html => {
+                        expandDiv.innerHTML = html;
+                        expandDiv.classList.remove('hidden');
+                        button.textContent = 'Show Less';
+                    });
+            } else {
+                expandDiv.classList.add('hidden');
+                button.textContent = 'Show All Tweets';
+            }
+        }
+        
+        // Classification badge generation
+        function getClassificationBadge(value, type) {
+            if (type === 'hawk_dove') {
+                if (value > 0.3) return '<span class="classification-badge hawk">Hawk</span>';
+                if (value < -0.3) return '<span class="classification-badge dove">Dove</span>';
+                return '<span class="classification-badge neutral">Neutral</span>';
+            }
+            
+            if (type === 'bull_bear') {
+                if (value > 0.3) return '<span class="classification-badge bull">Bull</span>';
+                if (value < -0.3) return '<span class="classification-badge bear">Bear</span>';
+                return '<span class="classification-badge neutral">Neutral</span>';
+            }
+            
+            if (type === 'sentiment') {
+                if (value > 0.3) return '<span class="classification-badge positive">Positive</span>';
+                if (value < -0.3) return '<span class="classification-badge negative">Negative</span>';
+                return '<span class="classification-badge neutral">Neutral</span>';
+            }
+            
+            if (type === 'market_impact') {
+                if (value > 0.7) return '<span class="classification-badge high-impact">High Impact</span>';
+                if (value > 0.3) return '<span class="classification-badge medium-impact">Medium</span>';
+                return '<span class="classification-badge low-impact">Low Impact</span>';
+            }
+        }
+    </script>
+</body>
+</html>

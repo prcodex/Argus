@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Unified Financial Intelligence Feed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            color: #1e3c72;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        
+        .stat-item {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .load-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .load-btn {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+        
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .load-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .feed-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feed-item {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 1.5rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+        
+        .feed-item:hover {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            margin: 0 -10px;
+            padding: 1.5rem 10px;
+        }
+        
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .source-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .item-time {
+            color: #666;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+        
+        .item-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .item-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+        }
+        
+        .item-footer {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .item-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .item-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+        
+        .item-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .financial-highlight {
+            border-left: 4px solid #f39c12;
+            padding-left: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .stats-bar {
+                gap: 0.5rem;
+            }
+            
+            .load-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Enhanced Unified Financial Intelligence Feed</h1>
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">📧 Loading...</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="load-buttons">
+            <button class="load-btn" id="loadNewerBtn" onclick="loadNewerItems()">
+                ⬆️ Load Newer
+            </button>
+            <button class="load-btn" id="loadOlderBtn" onclick="loadOlderItems()">
+                ⬇️ Load Older
+            </button>
+        </div>
+        
+        <div class="feed-container">
+            <div id="feedItems">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    Loading your enhanced unified feed...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let feedItems = [];
+        let isLoading = false;
+        
+        // Format timestamp for display
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (hours < 1) {
+                const minutes = Math.floor(diff / (1000 * 60));
+                return `${minutes}m ago`;
+            } else if (hours < 24) {
+                return `${hours}h ago`;
+            } else {
+                const days = Math.floor(hours / 24);
+                return `${days}d ago`;
+            }
+        }
+        
+        // Create feed item HTML
+        function createFeedItemHTML(item) {
+            const isFinancial = item.is_financial ? 'financial-highlight' : '';
+            const tagsHTML = item.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+            const linkHTML = item.link ? `<a href="${item.link}" target="_blank" class="item-link">🔗 Read More</a>` : '';
+            
+            return `
+                <div class="feed-item ${isFinancial}" data-timestamp="${item.created_at}">
+                    <div class="item-header">
+                        <div class="source-badge">
+                            <span>${item.source_icon}</span>
+                            <span>${item.source_name}</span>
+                        </div>
+                        <div class="item-time">${formatTime(item.created_at)}</div>
+                    </div>
+                    <div class="item-title">${item.title}</div>
+                    <div class="item-content">${item.content}</div>
+                    <div class="item-footer">
+                        <div class="item-tags">${tagsHTML}</div>
+                        ${linkHTML}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load initial feed
+        async function loadInitialFeed() {
+            try {
+                const response = await fetch('/api/feed?limit=25');
+                const data = await response.json();
+                
+                if (data.success) {
+                    feedItems = data.items;
+                    renderFeedItems();
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Error loading feed:', error);
+                document.getElementById('feedItems').innerHTML = `
+                    <div class="loading">❌ Error loading feed</div>
+                `;
+            }
+        }
+        
+        // Load newer items
+        async function loadNewerItems() {
+            if (isLoading || feedItems.length === 0) return;
+            
+            isLoading = true;
+            document.getElementById('loadNewerBtn').disabled = true;
+            
+            try {
+                const latestTimestamp = feedItems[0].created_at;
+                const response = await fetch(`/api/feed/newer?timestamp=${latestTimestamp}&limit=15`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    feedItems = data.items.concat(feedItems);
+                    renderFeedItems();
+                    
+                    // Smooth scroll to show new items
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (error) {
+                console.error('Error loading newer items:', error);
+            }
+            
+            isLoading = false;
+            document.getElementById('loadNewerBtn').disabled = false;
+        }
+        
+        // Load older items
+        async function loadOlderItems() {
+            if (isLoading || feedItems.length === 0) return;
+            
+            isLoading = true;
+            document.getElementById('loadOlderBtn').disabled = true;
+            
+            try {
+                const oldestTimestamp = feedItems[feedItems.length - 1].created_at;
+                const response = await fetch(`/api/feed/older?timestamp=${oldestTimestamp}&limit=15`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    feedItems = feedItems.concat(data.items);
+                    renderFeedItems();
+                }
+            } catch (error) {
+                console.error('Error loading older items:', error);
+            }
+            
+            isLoading = false;
+            document.getElementById('loadOlderBtn').disabled = false;
+        }
+        
+        // Render all feed items
+        function renderFeedItems() {
+            const container = document.getElementById('feedItems');
+            container.innerHTML = feedItems.map(createFeedItemHTML).join('');
+        }
+        
+        // Update statistics
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                const statsHTML = `
+                    <div class="stat-item">📧 ${stats.emails || 0} Emails</div>
+                    <div class="stat-item">🔥 ${stats.zerohedge || 0} Zero Hedge</div>
+                    <div class="stat-item">📊 ${stats.events || 0} Events</div>
+                    <div class="stat-item">📰 ${stats.reuters || 0} Reuters</div>
+                    <div class="stat-item">💹 ${stats.market || 0} Market</div>
+                    <div class="stat-item">📈 Total: ${stats.total || 0}</div>
+                `;
+                
+                document.getElementById('statsBar').innerHTML = statsHTML;
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        // Auto-refresh newer items every 2 minutes
+        setInterval(() => {
+            if (!isLoading) {
+                loadNewerItems();
+            }
+        }, 120000);
+        
+        // Load initial feed on page load
+        document.addEventListener('DOMContentLoaded', loadInitialFeed);
+    </script>
+</body>
+</html>

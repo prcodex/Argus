@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Tweet Viewer - Statistics</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(96, 165, 250, 0.1);
+        }
+        
+        .stats-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 15px;
+        }
+        
+        .big-number {
+            font-size: 3em;
+            font-weight: 700;
+            color: #fbbf24;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .authors-list {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .author-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #374151;
+            border-radius: 6px;
+        }
+        
+        .author-name {
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+        
+        .author-count {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+        
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .overview-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .overview-card h3 {
+            margin: 0 0 10px 0;
+            color: #94a3b8;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .overview-card .number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📈 SAGE Tweet Statistics</h1>
+        <p>Database Analytics & Author Breakdown</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">🐦 All Tweets</a>
+        <a href="/stats">📈 Statistics</a>
+        <a href="http://34.72.141.217:8501">📊 Temporal Dashboard</a>
+        <a href="http://34.72.141.217:8505">📅 Timeline Interface</a>
+    </div>
+    
+    <div class="stats-container">
+        <div class="overview-stats">
+            <div class="overview-card">
+                <h3>Total Tweets</h3>
+                <div class="number">{{ "{:,}".format(total_tweets) }}</div>
+            </div>
+            <div class="overview-card">
+                <h3>Recent (24h)</h3>
+                <div class="number">{{ recent_tweets }}</div>
+            </div>
+            <div class="overview-card">
+                <h3>Active Authors</h3>
+                <div class="number">{{ authors|length }}</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">📊 Tweets by Author</div>
+            <div class="authors-list">
+                {% for author in authors %}
+                <div class="author-row">
+                    <div class="author-name">@{{ author.author_username }}</div>
+                    <div class="author-count">{{ "{:,}".format(author.count) }} tweets</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-header">🔄 Auto Refresh</div>
+            <p>This page automatically refreshes every 5 minutes to show the latest statistics.</p>
+            <p>Last updated: <strong id="last-updated"></strong></p>
+        </div>
+    </div>
+    
+    <script>
+        // Update timestamp
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            document.getElementById('last-updated').textContent = timeStr;
+        });
+        
+        // Auto-refresh every 5 minutes
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

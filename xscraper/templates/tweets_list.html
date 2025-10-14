@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Tweet Viewer - All Tweets</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(96, 165, 250, 0.1);
+        }
+        
+        .tweets-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .tweet-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .tweet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tweet-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .author {
+            font-weight: 700;
+            color: #60a5fa;
+            font-size: 1.1em;
+            flex-grow: 1;
+        }
+        
+        .timestamp {
+            color: #94a3b8;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        .source-badge {
+            background: #374151;
+            color: #e5e7eb;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .tweet-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #f1f5f9;
+        }
+        
+        .engagement-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #94a3b8;
+        }
+        
+        .engagement-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .engagement-stat.high {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .load-more {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .load-more button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        
+        .load-more button:hover {
+            background: #2563eb;
+        }
+        
+        .tweet-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #374151;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .tweet-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .engagement-stats {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐦 SAGE Tweet Viewer</h1>
+        <p>Economic Intelligence Tweet Collection - Latest First</p>
+    </div>
+    
+    <div class="stats-bar">
+        <div>📊 Total Tweets: <strong>{{ total_tweets }}</strong></div>
+        <div>📄 Showing: <strong>{{ tweets|length }}</strong></div>
+        <div id="update-time">📅 Updated: <strong>Loading...</strong></div>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">🏠 All Tweets</a>
+        <a href="/stats">📈 Statistics</a>
+        <a href="http://34.72.141.217:8501">📊 Temporal Dashboard</a>
+        <a href="http://34.72.141.217:8505">📅 Timeline Interface</a>
+    </div>
+    
+    <div class="tweets-container">
+        {% for tweet in tweets %}
+        <div class="tweet-card">
+            <div class="tweet-header">
+                <div class="author">@{{ tweet.author }}</div>
+                <div class="timestamp">{{ tweet.created_at_et or tweet.created_at }}</div>
+                {% if tweet.source %}
+                <div class="source-badge">{{ tweet.source }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="tweet-text">{{ tweet.text }}</div>
+            
+            <div class="tweet-meta">
+                <div class="engagement-stats">
+                    {% set metrics = tweet.metrics %}
+                    <div class="engagement-stat {{ 'high' if metrics.likes > 100 else '' }}">
+                        ❤️ {{ "{:,}".format(metrics.likes) }}
+                    </div>
+                    <div class="engagement-stat {{ 'high' if metrics.retweets > 50 else '' }}">
+                        🔄 {{ "{:,}".format(metrics.retweets) }}
+                    </div>
+                    <div class="engagement-stat {{ 'high' if metrics.replies > 25 else '' }}">
+                        💬 {{ "{:,}".format(metrics.replies) }}
+                    </div>
+                    {% if metrics.impressions > 0 %}
+                    <div class="engagement-stat {{ 'high' if metrics.impressions > 10000 else '' }}">
+                        👁️ {{ "{:,}".format(metrics.impressions) }}
+                    </div>
+                    {% endif %}
+                    {% if metrics.bookmarks > 0 %}
+                    <div class="engagement-stat">
+                        🔖 {{ "{:,}".format(metrics.bookmarks) }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="tweet-id" style="font-size: 0.8em; color: #6b7280;">
+                    ID: {{ tweet.id[-12:] }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if tweets|length == 100 %}
+        <div class="load-more">
+            <button onclick="loadMore()">📄 Load More Tweets</button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        // Auto-refresh every 5 minutes
+        setTimeout(() => {
+            window.location.reload();
+        }, 300000);
+        
+        function loadMore() {
+            // Simple pagination - reload with more tweets
+            window.location.href = '/api/tweets?limit=200';
+        }
+        
+        // Add current time to stats
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            // Update the timestamp in the designated element
+            const updateTimeEl = document.getElementById('update-time');
+            if (updateTimeEl) {
+                updateTimeEl.innerHTML = `📅 Updated: <strong>${timeStr}</strong>`;
+            }
+        });
+    </script>
+</body>
+</html>

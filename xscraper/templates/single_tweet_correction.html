@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Tweet Classification Correction</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0f1c;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .correction-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .tweet-display {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .tweet-header {
+            background: #374151;
+            padding: 20px;
+            border-bottom: 1px solid #4b5563;
+        }
+        
+        .tweet-author {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .tweet-time {
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+        
+        .tweet-text {
+            font-size: 1.2em;
+            padding: 20px;
+            background: #2d3748;
+            border-radius: 8px;
+            border-left: 4px solid #60a5fa;
+            margin-bottom: 15px;
+        }
+        
+        .tweet-engagement {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .classification-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 25px;
+        }
+        
+        .model-section, .correction-section {
+            background: #374151;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .model-section {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .correction-section {
+            border-left: 4px solid #10b981;
+        }
+        
+        .section-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .classification-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #2d3748;
+            border-radius: 8px;
+        }
+        
+        .classification-label {
+            font-weight: 500;
+            min-width: 120px;
+            font-size: 1em;
+        }
+        
+        .classification-value {
+            font-family: monospace;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 1.1em;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .hawk-value { background: #dc2626; color: white; }
+        .dove-value { background: #16a34a; color: white; }
+        .bull-value { background: #0d9488; color: white; }
+        .bear-value { background: #b91c1c; color: white; }
+        .positive-value { background: #059669; color: white; }
+        .negative-value { background: #dc2626; color: white; }
+        .neutral-value { background: #6b7280; color: white; }
+        .impact-value { background: #f59e0b; color: white; }
+        
+        .correction-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-size: 1em;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .form-group input[type="range"] {
+            flex-grow: 1;
+            background: #4b5563;
+            height: 8px;
+            border-radius: 4px;
+        }
+        
+        .range-display {
+            font-family: monospace;
+            font-weight: 700;
+            text-align: center;
+            padding: 8px 12px;
+            background: #4b5563;
+            border-radius: 6px;
+            min-width: 60px;
+            font-size: 1.1em;
+        }
+        
+        .model-reasoning {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-style: italic;
+            border-left: 3px solid #6366f1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 25px;
+            border-top: 1px solid #4b5563;
+            background: #2d3748;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .confidence-section {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 Correct Tweet Classification</h1>
+        <p>Compare Model Prediction • Apply Your Expert Knowledge • Improve AI</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">📊 Timeline</a>
+        <a href="/review">🔍 Review All</a>
+        <a href="/api/performance">📈 Performance</a>
+    </div>
+    
+    <div class="correction-container">
+        <div class="tweet-display">
+            <div class="tweet-header">
+                <div class="tweet-author">@{{ tweet.author }}</div>
+                <div class="tweet-time">{{ tweet.created_at_et }}</div>
+                <div class="tweet-text">{{ tweet.text }}</div>
+                <div class="tweet-engagement">
+                    <span>❤️ {{ tweet.engagement.get('like_count', 0) }} likes</span>
+                    <span>🔄 {{ tweet.engagement.get('retweet_count', 0) }} retweets</span>
+                    <span>💬 {{ tweet.engagement.get('reply_count', 0) }} replies</span>
+                </div>
+            </div>
+            
+            <div class="classification-comparison">
+                <!-- Model Predictions -->
+                <div class="model-section">
+                    <div class="section-title">
+                        🤖 Model Predictions
+                        <span style="font-size: 0.8em; opacity: 0.7;">({{ "%.0f"|format(tweet.model.confidence * 100) }}% confident)</span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Hawk/Dove Policy:</span>
+                        {% set hd = tweet.model.hawk_dove %}
+                        <span class="classification-value {% if hd > 0.1 %}hawk-value{% elif hd < -0.1 %}dove-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(hd) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Bull/Bear Market:</span>
+                        {% set bb = tweet.model.bull_bear %}
+                        <span class="classification-value {% if bb > 0.1 %}bull-value{% elif bb < -0.1 %}bear-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(bb) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Sentiment:</span>
+                        {% set sent = tweet.model.sentiment %}
+                        <span class="classification-value {% if sent > 0.1 %}positive-value{% elif sent < -0.1 %}negative-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(sent) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Market Impact:</span>
+                        <span class="classification-value impact-value">{{ "%.2f"|format(tweet.model.market_impact) }}</span>
+                    </div>
+                    
+                    {% if tweet.model.reasoning %}
+                    <div class="model-reasoning">
+                        <strong>Model's Reasoning:</strong><br>
+                        {{ tweet.model.reasoning }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Your Corrections -->
+                <div class="correction-section">
+                    <div class="section-title">
+                        👤 Your Expert Correction
+                        {% if tweet.human_corrections %}
+                            <span style="color: #10b981; font-size: 0.8em;">(Previously corrected ✓)</span>
+                        {% endif %}
+                    </div>
+                    
+                    <form class="correction-form" onsubmit="submitCorrection(event)">
+                        <div class="form-group">
+                            <label>Hawk/Dove Policy Stance (-1.0 = Very Dove, +1.0 = Very Hawk)</label>
+                            <div class="slider-container">
+                                <span>Dove</span>
+                                <input type="range" min="-1" max="1" step="0.1" 
+                                       value="{{ tweet.human_corrections.hawk_dove if tweet.human_corrections else tweet.model.hawk_dove }}"
+                                       name="hawk_dove" id="hawk-dove-slider"
+                                       oninput="updateSliderDisplay('hawk-dove')">
+                                <span>Hawk</span>
+                                <div class="range-display" id="hawk-dove-display">0.0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Bull/Bear Market Outlook (-1.0 = Very Bear, +1.0 = Very Bull)</label>
+                            <div class="slider-container">
+                                <span>Bear</span>
+                                <input type="range" min="-1" max="1" step="0.1"
+                                       value="{{ tweet.human_corrections.bull_bear if tweet.human_corrections else tweet.model.bull_bear }}"
+                                       name="bull_bear" id="bull-bear-slider"
+                                       oninput="updateSliderDisplay('bull-bear')">
+                                <span>Bull</span>
+                                <div class="range-display" id="bull-bear-display">0.0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Sentiment Tone (-1.0 = Very Negative, +1.0 = Very Positive)</label>
+                            <div class="slider-container">
+                                <span>Negative</span>
+                                <input type="range" min="-1" max="1" step="0.1"
+                                       value="{{ tweet.human_corrections.sentiment if tweet.human_corrections else tweet.model.sentiment }}"
+                                       name="sentiment" id="sentiment-slider"
+                                       oninput="updateSliderDisplay('sentiment')">
+                                <span>Positive</span>
+                                <div class="range-display" id="sentiment-display">0.0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Market Impact Potential (0.0 = No Impact, 1.0 = Major Market Mover)</label>
+                            <div class="slider-container">
+                                <span>Low</span>
+                                <input type="range" min="0" max="1" step="0.1"
+                                       value="{{ tweet.human_corrections.market_impact if tweet.human_corrections else tweet.model.market_impact }}"
+                                       name="market_impact" id="market-impact-slider"
+                                       oninput="updateSliderDisplay('market-impact')">
+                                <span>High</span>
+                                <div class="range-display" id="market-impact-display">0.0</div>
+                            </div>
+                        </div>
+                        
+                        <div class="confidence-section">
+                            <div class="form-group">
+                                <label>Your Confidence in This Correction (1 = Uncertain, 5 = Very Confident)</label>
+                                <div class="slider-container">
+                                    <span>Uncertain</span>
+                                    <input type="range" min="1" max="5" step="1" value="3"
+                                           name="confidence" id="confidence-slider"
+                                           oninput="updateSliderDisplay('confidence')">
+                                    <span>Very Confident</span>
+                                    <div class="range-display" id="confidence-display">3</div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Notes (Why do you disagree with the model?)</label>
+                                <textarea name="notes" rows="3" 
+                                         style="width: 100%; padding: 10px; border: 1px solid #4b5563; border-radius: 4px; background: #1e293b; color: #e0e6ed; resize: vertical;"
+                                         placeholder="Optional: Explain your reasoning...">{{ tweet.correction_notes if tweet.human_corrections else '' }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button type="button" class="btn-secondary" onclick="goBack()">
+                    ← Back to Review
+                </button>
+                <button type="button" class="btn-primary" onclick="submitCorrection()">
+                    🎓 Apply Correction & Train Model
+                </button>
+                {% if tweet.human_corrections %}
+                <button type="button" class="btn-secondary" onclick="revertToModel()">
+                    🔄 Revert to Model
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function updateSliderDisplay(sliderId) {
+            const slider = document.getElementById(sliderId + '-slider');
+            const display = document.getElementById(sliderId + '-display');
+            const value = parseFloat(slider.value);
+            
+            display.textContent = value.toFixed(1);
+            
+            // Update display color based on value and type
+            if (sliderId === 'hawk-dove') {
+                display.className = value > 0.1 ? 'range-display hawk-value' : 
+                                  value < -0.1 ? 'range-display dove-value' : 'range-display neutral-value';
+            } else if (sliderId === 'bull-bear') {
+                display.className = value > 0.1 ? 'range-display bull-value' : 
+                                  value < -0.1 ? 'range-display bear-value' : 'range-display neutral-value';
+            } else if (sliderId === 'sentiment') {
+                display.className = value > 0.1 ? 'range-display positive-value' : 
+                                  value < -0.1 ? 'range-display negative-value' : 'range-display neutral-value';
+            } else {
+                display.className = 'range-display impact-value';
+            }
+        }
+        
+        async function submitCorrection() {
+            const form = document.querySelector('.correction-form');
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`/api/classify/{{ tweet.tweet_id }}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success message
+                    document.querySelector('.action-buttons').innerHTML = 
+                        '<div style="text-align: center; padding: 20px; color: #10b981; font-size: 1.2em;">✅ Correction applied successfully! Model is learning...</div>';
+                    
+                    // Redirect back to review after delay
+                    setTimeout(() => {
+                        window.location.href = '/review';
+                    }, 2000);
+                } else {
+                    alert('Error applying correction: ' + result.message);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        }
+        
+        function goBack() {
+            window.location.href = '/review';
+        }
+        
+        function revertToModel() {
+            // TODO: Implement revert functionality
+            if (confirm('Revert to model predictions? This will remove your correction.')) {
+                // Send request to revert classification
+                fetch(`/api/revert/{{ tweet.tweet_id }}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            alert('Error reverting: ' + result.message);
+                        }
+                    });
+            }
+        }
+        
+        // Initialize slider displays
+        document.addEventListener('DOMContentLoaded', function() {
+            ['hawk-dove', 'bull-bear', 'sentiment', 'market-impact', 'confidence'].forEach(id => {
+                updateSliderDisplay(id);
+            });
+        });
+    </script>
+</body>
+</html>
