@@ -93,3 +93,4 @@ Your repository structure is ready with:
 ---
 *Repository: https://github.com/prcodex/Argus*
 *Created: October 2025*
+
