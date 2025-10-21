@@ -1,0 +1,120 @@
+<!-- HTMX-updated windows partial template -->
+{% for window in windows %}
+<div class="window-card">
+    <div class="window-header">
+        <div class="window-time">
+            🕒 {{ window.start_time_display }} - {{ window.end_time_display }}
+        </div>
+        <div class="window-stats">
+            <span>📝 {{ window.total_tweets }} tweets</span>
+            <span>🧠 {{ window.classified_tweets }} classified</span>
+            {% if window.human_corrections > 0 %}
+                <span>🎓 {{ window.human_corrections }} corrections</span>
+            {% endif %}
+            {% if window.window_metrics.classification_distribution %}
+                {% set dist = window.window_metrics.classification_distribution %}
+                <span>🔴 {{ dist.hawk }}H 🟢 {{ dist.dove }}D</span>
+                <span>🐂 {{ dist.bull }}B 🐻 {{ dist.bear }}B</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Most Relevant Tweets (Top 3-5) -->
+    {% for tweet in window.most_relevant_tweets %}
+    <div class="tweet-card">
+        <div class="tweet-author">
+            @{{ tweet.author }} 
+            <span style="font-weight: normal; opacity: 0.7;">• {{ tweet.created_at_et }}</span>
+        </div>
+        
+        <div class="tweet-text">{{ tweet.text }}</div>
+        
+        <div class="tweet-classifications">
+            <!-- Active classifications (model or human corrected) -->
+            {% set class = tweet.active_classifications %}
+            
+            <!-- Hawk/Dove -->
+            {% if class.hawk_dove > 0.1 %}
+                <span class="classification-badge hawk">Hawk {{ "%.1f"|format(class.hawk_dove) }}</span>
+            {% elif class.hawk_dove < -0.1 %}
+                <span class="classification-badge dove">Dove {{ "%.1f"|format(class.hawk_dove) }}</span>
+            {% else %}
+                <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.hawk_dove) }}</span>
+            {% endif %}
+            
+            <!-- Bull/Bear -->
+            {% if class.bull_bear > 0.1 %}
+                <span class="classification-badge bull">Bull {{ "%.1f"|format(class.bull_bear) }}</span>
+            {% elif class.bull_bear < -0.1 %}
+                <span class="classification-badge bear">Bear {{ "%.1f"|format(class.bull_bear) }}</span>
+            {% else %}
+                <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.bull_bear) }}</span>
+            {% endif %}
+            
+            <!-- Sentiment -->
+            {% if class.sentiment > 0.1 %}
+                <span class="classification-badge positive">Positive {{ "%.1f"|format(class.sentiment) }}</span>
+            {% elif class.sentiment < -0.1 %}
+                <span class="classification-badge negative">Negative {{ "%.1f"|format(class.sentiment) }}</span>
+            {% else %}
+                <span class="classification-badge neutral">Neutral {{ "%.1f"|format(class.sentiment) }}</span>
+            {% endif %}
+            
+            <!-- Market Impact -->
+            {% if class.market_impact > 0.7 %}
+                <span class="classification-badge high-impact">High Impact</span>
+            {% elif class.market_impact > 0.3 %}
+                <span class="classification-badge medium-impact">Medium</span>
+            {% else %}
+                <span class="classification-badge low-impact">Low</span>
+            {% endif %}
+            
+            <!-- Source indicator -->
+            {% if class.source == 'human' %}
+                <span class="source-indicator human-source">Human ✓</span>
+            {% else %}
+                <span class="source-indicator model-source">Model</span>
+            {% endif %}
+        </div>
+        
+        <div class="tweet-meta">
+            <div class="engagement-stats">
+                <span>❤️ {{ tweet.engagement.get('like_count', 0) }}</span>
+                <span>🔄 {{ tweet.engagement.get('retweet_count', 0) }}</span>
+                <span>💬 {{ tweet.engagement.get('reply_count', 0) }}</span>
+            </div>
+            <div>
+                Relevance: {{ "%.3f"|format(tweet.relevance_score) }}
+                {% if tweet.human_corrections %}
+                    • <strong>Corrected</strong>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Expand button for remaining tweets -->
+    {% if window.remaining_tweets %}
+    <button class="expand-button" 
+            id="btn-{{ window.window_id }}"
+            onclick="toggleWindow('{{ window.window_id }}')">
+        Show All {{ window.total_tweets }} Tweets
+    </button>
+    
+    <div id="expand-{{ window.window_id }}" class="hidden">
+        <!-- Expanded tweets will be loaded here -->
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="window-card">
+    <div class="window-header">
+        <div class="window-time">⏳ No classified windows available</div>
+    </div>
+    <div class="tweet-card">
+        <div class="tweet-text">
+            Classifier is processing windows. Check back in a few minutes for economic intelligence.
+        </div>
+    </div>
+</div>
+{% endfor %}

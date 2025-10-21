@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 SAGE Unified Feed - Multi-Scraper Enhanced</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background-color: #f1f3f4;
+            color: #202124;
+        }
+        
+        /* Gmail-like Header */
+        .gmail-header {
+            background: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .sage-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #0f9d58;
+        }
+        
+        .sage-logo .material-icons {
+            font-size: 28px;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            height: 46px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 8px;
+            padding: 0 48px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        /* Main Layout */
+        .gmail-main {
+            display: flex;
+            margin-top: 64px;
+            height: calc(100vh - 64px);
+        }
+        
+        /* Sidebar */
+        .gmail-sidebar {
+            width: 256px;
+            background: white;
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
+        
+        .compose-btn {
+            margin: 8px 8px 16px 8px;
+            height: 56px;
+            width: calc(100% - 16px);
+            background: #0f9d58;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            transition: all 0.2s;
+        }
+        
+        .compose-btn:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: #0b8043;
+        }
+        
+        .nav-item {
+            height: 32px;
+            padding: 0 26px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+            color: #202124;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: #f1f3f4;
+        }
+        
+        .nav-item.active {
+            background: #fce8e6;
+            color: #d93025;
+            font-weight: 500;
+        }
+        
+        .nav-item .material-icons {
+            font-size: 20px;
+        }
+        
+        .feed-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .content-header {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .content-title {
+            font-size: 20px;
+            font-weight: 400;
+            color: #202124;
+        }
+        
+        .refresh-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #5f6368;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .refresh-btn .material-icons {
+            font-size: 20px;
+        }
+        
+        /* Feed List */
+        .feed-list {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .feed-item {
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.1s;
+            position: relative;
+        }
+        
+        .feed-item:hover {
+            box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            z-index: 1;
+        }
+        
+        .feed-item.unread {
+            background: #ffffff;
+            font-weight: 500;
+        }
+        
+        .feed-item.read {
+            background: #f8f9fa;
+            color: #5f6368;
+        }
+        
+        .item-content {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px 24px;
+            gap: 16px;
+        }
+        
+        .item-checkbox {
+            margin-top: 4px;
+        }
+        
+        .item-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4285f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .item-main {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .item-sender {
+            font-weight: 500;
+            color: #202124;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .item-type {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .item-type.email {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        
+        .item-time {
+            color: #5f6368;
+            font-size: 12px;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        
+        .item-subject {
+            font-size: 14px;
+            line-height: 1.3;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .item-preview {
+            font-size: 13px;
+            color: #5f6368;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        .engagement-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .engagement-item .material-icons {
+            font-size: 14px;
+        }
+        
+        /* Detail View Panel */
+        .detail-panel {
+            position: fixed;
+            top: 64px;
+            right: -600px;
+            width: 600px;
+            height: calc(100vh - 64px);
+            background: white;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        
+        .detail-panel.open {
+            right: 0;
+        }
+        
+        .detail-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #5f6368;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .back-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #5f6368;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-content {
+            padding: 24px;
+        }
+        
+        .detail-subject {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .sender-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #4285f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .sender-info {
+            flex: 1;
+        }
+        
+        .sender-name {
+            font-weight: 500;
+            color: #202124;
+            margin-bottom: 2px;
+        }
+        
+        .sender-email {
+            font-size: 13px;
+            color: #5f6368;
+        }
+        
+        .detail-body {
+            line-height: 1.6;
+            color: #202124;
+        }
+        
+        .detail-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+        }
+        
+        .html-content {
+            line-height: 1.6;
+        }
+        
+        .html-content img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 40px;
+            color: #5f6368;
+        }
+        
+        .loading .material-icons {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Tweet Analysis Styles */
+        .tweet-analysis {
+            margin-top: 24px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tweet-analysis h3 {
+            margin-bottom: 16px;
+            color: #202124;
+            font-size: 16px;
+        }
+        
+        .analysis-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-label {
+            font-weight: 500;
+            color: #5f6368;
+        }
+        
+        .analysis-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .score-badge.dovish {
+            background: #e8f5e8;
+            color: #137333;
+        }
+        
+        .score-badge.hawkish {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .score-badge.neutral {
+            background: #f1f3f4;
+            color: #5f6368;
+        }
+        
+        .score-badge.bullish {
+            background: #e8f5e8;
+            color: #137333;
+        }
+        
+        .score-badge.bearish {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .engagement-detail {
+            display: flex;
+            gap: 24px;
+            margin: 16px 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .engagement-stat {
+            text-align: center;
+        }
+        
+        .engagement-number {
+            display: block;
+            font-size: 20px;
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .engagement-label {
+            font-size: 12px;
+            color: #5f6368;
+            text-transform: uppercase;
+        }
+        
+        /* 🎯 NEW: Enhanced URL Content Styles */
+        .expanded-urls {
+            margin-top: 24px;
+        }
+        
+        .expanded-urls h3 {
+            color: #202124;
+            font-size: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .url-expansion {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .url-header {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .url-info {
+            background: #f8f9fa;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #5f6368;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .url-content {
+            padding: 16px;
+            background: white;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .url-content h1, .url-content h2, .url-content h3 {
+            margin-bottom: 8px;
+            color: #202124;
+        }
+        
+        .url-content p {
+            margin-bottom: 12px;
+        }
+        
+        .url-content blockquote {
+            border-left: 4px solid #4285f4;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #5f6368;
+            font-style: italic;
+        }
+        
+        .source-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #e8f0fe;
+            color: #1a73e8;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+        
+        .source-badge.specialized {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        
+        .source-badge.universal {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .source-badge.fast {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .source-badge.error {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .url-domain {
+            color: #4285f4;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .url-domain:hover {
+            text-decoration: underline;
+        }
+        
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Gmail-like Header -->
+    <header class="gmail-header">
+        <div class="sage-logo">
+            <span class="material-icons">analytics</span>
+            SAGE Intelligence Feed
+        </div>
+        
+        <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" placeholder="Search intelligence...">
+        </div>
+        
+        <div class="sage-logo">
+            🎯 Multi-Scraper Enhanced
+        </div>
+    </header>
+    
+    <!-- Main Layout -->
+    <div class="gmail-main">
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header">
+                <button class="back-btn" onclick="closeDetail()">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Feed
+                </button>
+                <div class="detail-actions">
+                    <button class="action-btn" title="Open in new tab" onclick="openInNewTab()">
+                        <span class="material-icons">open_in_new</span>
+                    </button>
+                    <button class="action-btn" title="Share">
+                        <span class="material-icons">share</span>
+                    </button>
+                </div>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="gmail-sidebar">
+            <button class="compose-btn">
+                <span class="material-icons">edit</span>
+                Compose Intelligence
+            </button>
+            
+            <div class="nav-item active">
+                <span class="material-icons">inbox</span>
+                <span>Unified Feed</span>
+                <span class="feed-count" id="feedCount">0</span>
+            </div>
+            
+            <div class="nav-item" onclick="filterFeed('email')">
+                <span class="material-icons">email</span>
+                <span>Emails Only</span>
+            </div>
+            
+            <div class="nav-item" onclick="filterFeed('tweet')">
+                <span class="material-icons">alternate_email</span>
+                <span>Twitter Only</span>
+            </div>
+            
+            <div class="nav-item">
+                <span class="material-icons">auto_awesome</span>
+                <span>AI Analysis</span>
+            </div>
+            
+            <div class="nav-item">
+                <span class="material-icons">trending_up</span>
+                <span>Market Impact</span>
+            </div>
+            
+            <div class="nav-item">
+                <span class="material-icons">schedule</span>
+                <span>Timeline</span>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="content-header">
+                <h1 class="content-title">📡 Live Intelligence Feed</h1>
+                <button class="refresh-btn" onclick="loadFeed()" title="Refresh">
+                    <span class="material-icons">refresh</span>
+                </button>
+            </div>
+            
+            <div class="feed-list" id="feedList">
+                <div class="loading">
+                    <span class="material-icons">hourglass_empty</span>
+                    <p>Loading unified feed...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-indicator" id="statusIndicator" style="display: none;">
+        Auto-refresh: 60s
+    </div>
+
+    <script>
+        let feedData = [];
+        let filteredData = [];
+        let currentFilter = 'all';
+        
+        // Load feed data
+        async function loadFeed() {
+            try {
+                const response = await fetch('/api/feed');
+                const data = await response.json();
+                
+                if (data.success) {
+                    feedData = data.items;
+                    applyFilter();
+                    updateFeedCount();
+                    document.getElementById('statusIndicator').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Failed to load feed');
+                }
+                
+            } catch (error) {
+                console.error('Error loading feed:', error);
+                document.getElementById('feedList').innerHTML = `
+                    <div class="loading">
+                        <span class="material-icons">error</span>
+                        <p>Error loading feed: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Filter feed by type
+        function filterFeed(type) {
+            currentFilter = type;
+            applyFilter();
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function applyFilter() {
+            if (currentFilter === 'all') {
+                filteredData = feedData;
+            } else {
+                filteredData = feedData.filter(item => item.type === currentFilter);
+            }
+            renderFeed();
+        }
+        
+        function updateFeedCount() {
+            document.getElementById('feedCount').textContent = feedData.length;
+        }
+        
+        // Render feed items
+        function renderFeed() {
+            const feedList = document.getElementById('feedList');
+            
+            if (filteredData.length === 0) {
+                feedList.innerHTML = `
+                    <div class="loading">
+                        <span class="material-icons">inbox</span>
+                        <p>No items in feed</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            feedList.innerHTML = filteredData.map(item => `
+                <div class="feed-item" onclick="${item.type === 'tweet' ? `openTweetDetail('${item.id}')` : `openEmailDetail('${item.id}')`}">
+                    <div class="item-content">
+                        <div class="item-avatar" style="background: ${item.type === 'tweet' ? '#1da1f2' : '#34a853'}">
+                            ${item.author ? item.author.charAt(0).toUpperCase() : 'S'}
+                        </div>
+                        <div class="item-main">
+                            <div class="item-header">
+                                <span class="item-sender">${item.author || 'Unknown'}</span>
+                                <span class="item-type ${item.type}">${item.type}</span>
+                                <span class="item-time">${item.display_time || formatTime(item.timestamp)}</span>
+                            </div>
+                            <div class="item-subject">
+                                ${item.type === 'email' ? item.subject : item.content.substring(0, 80) + (item.content.length > 80 ? '...' : '')}
+                            </div>
+                            <div class="item-preview">
+                                ${item.type === 'email' ? item.content_preview : ''}
+                            </div>
+                            ${item.type === 'tweet' ? `
+                                <div class="item-actions">
+                                    <div class="engagement-item">
+                                        <span class="material-icons">favorite_border</span>
+                                        <span>${item.likes || 0}</span>
+                                    </div>
+                                    <div class="engagement-item">
+                                        <span class="material-icons">repeat</span>
+                                        <span>${item.retweets || 0}</span>
+                                    </div>
+                                    ${item.expanded_urls && item.expanded_urls.length > 0 ? `
+                                        <div class="engagement-item">
+                                            <span class="material-icons">link</span>
+                                            <span>Article Available</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function formatTime(timestamp) {
+            try {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                });
+            } catch {
+                return timestamp;
+            }
+        }
+        
+        // Detail view functions
+        let currentDetailItem = null;
+        
+        async function openEmailDetail(emailId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading email...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/email/${emailId}`);
+                const email = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(email.error);
+                }
+                
+                currentDetailItem = { type: 'email', data: email };
+                
+                // Render email detail
+                content.innerHTML = `
+                    <h1 class="detail-subject">${email.subject}</h1>
+                    
+                    <div class="detail-meta">
+                        <div class="sender-avatar">
+                            ${(email.sender_name || email.sender)[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${email.sender_name || email.sender}</div>
+                            <div class="sender-email">${email.sender}</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${email.date_display}</div>
+                            ${email.cc ? `<div>CC: ${email.cc}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body">
+                        ${email.content_type === 'html' ? 
+                            `<div class="html-content">${email.rendered_content}</div>` : 
+                            `<pre>${email.content}</pre>`
+                        }
+                    </div>
+                    
+                    ${email.extracted_links && email.extracted_links.length > 0 ? `
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+                            <h3>🔗 Extracted Links</h3>
+                            <div style="margin-top: 12px;">
+                                ${email.extracted_links.map(link => `
+                                    <div style="margin-bottom: 8px;">
+                                        <a href="${link}" target="_blank" style="color: #1a73e8; text-decoration: none;">${link}</a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${email.has_attachments ? `
+                        <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e0e0e0;">
+                            <h3>📎 Attachments (${email.attachment_count})</h3>
+                            <div style="margin-top: 12px;">
+                                ${email.attachments.map(attachment => `
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+                                        <span class="material-icons">attach_file</span>
+                                        <span>${attachment.filename}</span>
+                                        <span style="color: #5f6368; font-size: 12px;">(${formatFileSize(attachment.size)})</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        async function openTweetDetail(tweetId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading tweet...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/tweet/${tweetId}`);
+                const tweet = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(tweet.error);
+                }
+                
+                currentDetailItem = { type: 'tweet', data: tweet };
+                
+                // 🎯 Enhanced tweet detail with AUTOMATIC article expansion
+                content.innerHTML = `
+                    <div class="detail-meta">
+                        <div class="sender-avatar" style="background: #1da1f2;">
+                            ${tweet.author_username[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${tweet.author}</div>
+                            <div class="sender-email">Twitter</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${tweet.date_display}</div>
+                            <div><a href="${tweet.url}" target="_blank" style="color: #1da1f2;">View on Twitter</a></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body" style="font-size: 18px; line-height: 1.6; margin: 24px 0;">
+                        ${tweet.content}
+                    </div>
+                    
+                    <div class="engagement-detail">
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.likes}</span>
+                            <span class="engagement-label">Likes</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.retweets}</span>
+                            <span class="engagement-label">Retweets</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.replies}</span>
+                            <span class="engagement-label">Replies</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.quotes}</span>
+                            <span class="engagement-label">Quotes</span>
+                        </div>
+                    </div>
+                    
+                    ${tweet.analysis && Object.keys(tweet.analysis).length > 0 ? `
+                        <div class="tweet-analysis">
+                            <h3>🧠 AI Analysis</h3>
+                            ${tweet.analysis.monetary ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Monetary Policy:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.monetary.label.toLowerCase()}">
+                                            ${tweet.analysis.monetary.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.monetary.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.growth ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Sentiment:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.growth.label.toLowerCase()}">
+                                            ${tweet.analysis.growth.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.growth.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.impact ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Impact:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge" style="background: ${tweet.analysis.impact.score > 0.6 ? '#fce8e6' : '#f8f9fa'}; color: ${tweet.analysis.impact.score > 0.6 ? '#d93025' : '#5f6368'};">
+                                            ${tweet.analysis.impact.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.impact.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.confidence > 0 ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Confidence:</span>
+                                    <span style="color: #5f6368;">${(tweet.confidence * 100).toFixed(0)}%</span>
+                                </div>
+                            ` : ''}
+                            ${tweet.reasoning ? `
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                                    <strong>Analysis Reasoning:</strong>
+                                    <p style="margin-top: 8px; color: #5f6368; font-size: 13px;">${tweet.reasoning}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    ${tweet.expanded_urls && tweet.expanded_urls.length > 0 ? `
+                        <div class="expanded-urls">
+                            <h3>
+                                <span class="material-icons">article</span>
+                                Full Article Content
+                            </h3>
+                            ${tweet.expanded_urls.map(urlData => `
+                                <div class="url-expansion">
+                                    <div class="url-header">
+                                        <a href="${urlData.final_url}" target="_blank" class="url-domain">
+                                            📰 ${urlData.domain || 'Article'}
+                                        </a>
+                                        <span class="source-badge ${urlData.source.toLowerCase().includes('specialized') ? 'specialized' : urlData.source.toLowerCase().includes('universal') ? 'universal' : urlData.source.toLowerCase().includes('fast') ? 'fast' : 'error'}">
+                                            ${urlData.source}
+                                        </span>
+                                    </div>
+                                    <div class="url-info">
+                                        🔗 <strong>Original:</strong> ${urlData.original_url}<br>
+                                        📍 <strong>Final URL:</strong> ${urlData.final_url}
+                                        ${urlData.title ? `<br>📄 <strong>Title:</strong> ${urlData.title}` : ''}
+                                    </div>
+                                    <div class="url-content">
+                                        ${urlData.success ? 
+                                            urlData.content : 
+                                            `<em style="color: #d93025;">Content extraction failed: ${urlData.content}</em>`
+                                        }
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('open');
+            currentDetailItem = null;
+        }
+        
+        function openInNewTab() {
+            if (currentDetailItem) {
+                if (currentDetailItem.type === 'tweet' && currentDetailItem.data.url) {
+                    window.open(currentDetailItem.data.url, '_blank');
+                }
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Auto-refresh every 60 seconds
+        setInterval(loadFeed, 60000);
+        
+        // Initial load
+        loadFeed();
+    </script>
+</body>
+</html>

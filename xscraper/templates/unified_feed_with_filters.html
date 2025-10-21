@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Unified Feed - Twitter + Email Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background-color: #f1f3f4;
+            color: #202124;
+        }
+        
+        /* Gmail-like Header */
+        .gmail-header {
+            background: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .sage-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #0f9d58;
+        }
+        
+        .sage-logo .material-icons {
+            font-size: 28px;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            height: 46px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 8px;
+            padding: 0 48px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        /* Main Layout */
+        .gmail-main {
+            display: flex;
+            margin-top: 64px;
+            height: calc(100vh - 64px);
+        }
+        
+        /* Sidebar */
+        .gmail-sidebar {
+            width: 256px;
+            background: white;
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
+        
+        .compose-btn {
+            margin: 8px 8px 16px 8px;
+            height: 56px;
+            width: calc(100% - 16px);
+            background: #0f9d58;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            transition: all 0.2s;
+        }
+        
+        .compose-btn:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: #0b8043;
+        }
+        
+        .nav-item {
+            height: 32px;
+            padding: 0 26px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+            color: #202124;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: #f1f3f4;
+        }
+        
+        .nav-item.active {
+            background: #fce8e6;
+            color: #d93025;
+            font-weight: 500;
+        }
+        
+        .nav-item .material-icons {
+            font-size: 20px;
+        }
+        
+        .feed-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            background: white;
+            margin: 16px 16px 16px 0;
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+        
+        /* Feed Header */
+        .feed-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .feed-title {
+            font-size: 22px;
+            color: #202124;
+        }
+        
+        .feed-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        /* Feed Items */
+        .feed-list {
+            position: relative;
+        }
+        
+        .feed-item {
+            display: flex;
+            padding: 12px 24px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: all 0.1s;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .feed-item:hover {
+            box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 
+                        0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            z-index: 1;
+        }
+        
+        .feed-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .feed-icon.twitter {
+            background: #1da1f2;
+            color: white;
+        }
+        
+        .feed-icon.email {
+            background: #ea4335;
+            color: white;
+        }
+        
+        .feed-icon.financial {
+            background: #0f9d58;
+            color: white;
+        }
+        
+        .feed-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .feed-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .feed-author {
+            font-weight: 500;
+            color: #202124;
+            font-size: 14px;
+        }
+        
+        .feed-source {
+            color: #5f6368;
+            font-size: 12px;
+        }
+        
+        .feed-time {
+            margin-left: auto;
+            color: #5f6368;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .feed-subject {
+            font-size: 14px;
+            color: #202124;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-preview {
+            font-size: 14px;
+            color: #5f6368;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f1f3f4;
+            color: #5f6368;
+        }
+        
+        .tag.dovish {
+            background: #e6f4ea;
+            color: #0d652d;
+        }
+        
+        .tag.hawkish {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .tag.breaking {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .tag.financial {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+        
+        /* Time separator */
+        .time-separator {
+            padding: 8px 24px;
+            background: #f8f9fa;
+            font-size: 12px;
+            color: #5f6368;
+            font-weight: 500;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+        
+        .loading .material-icons {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Engagement metrics */
+        .engagement {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .engagement-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .engagement-item .material-icons {
+            font-size: 14px;
+        }
+        
+        /* Detail View Panel */
+        .detail-panel {
+            position: fixed;
+            top: 64px;
+            right: -600px;
+            width: 600px;
+            height: calc(100vh - 64px);
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        
+        .detail-panel.open {
+            right: 0;
+        }
+        
+        .detail-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-content {
+            padding: 24px;
+        }
+        
+        .detail-subject {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .sender-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #0f9d58;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .sender-info {
+            flex: 1;
+        }
+        
+        .sender-name {
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .sender-email {
+            font-size: 13px;
+            color: #5f6368;
+        }
+        
+        .detail-body {
+            line-height: 1.6;
+            color: #202124;
+        }
+        
+        .detail-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+        }
+        
+        .html-content {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .html-content img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .attachments-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f3f4;
+        }
+        
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .links-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f3f4;
+        }
+        
+        .links-section a {
+            color: #1967d2;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        
+        .links-section a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Tweet-specific styling */
+        .tweet-analysis {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .analysis-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-label {
+            font-weight: 500;
+        }
+        
+        .analysis-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .score-badge.dovish {
+            background: #e6f4ea;
+            color: #0d652d;
+        }
+        
+        .score-badge.hawkish {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .score-badge.bullish {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+        
+        .score-badge.bearish {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .engagement-detail {
+            display: flex;
+            gap: 24px;
+            margin: 16px 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .engagement-stat {
+            text-align: center;
+        }
+        
+        .engagement-number {
+            font-size: 24px;
+            font-weight: 500;
+            color: #202124;
+            display: block;
+        }
+        
+        .engagement-label {
+            font-size: 12px;
+            color: #5f6368;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <!-- Gmail-like Header -->
+    <header class="gmail-header">
+        <div class="sage-logo">
+            <span class="material-icons">layers</span>
+            <span>SAGE Unified Feed</span>
+        </div>
+        
+        <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="searchInput" placeholder="Search Twitter & Email intelligence...">
+        </div>
+        
+        <!-- Time Range Controls -->
+        <div class="time-range-controls">
+            <button id="todayBtn" class="time-range-btn" data-range="today">
+                <span class="material-icons">today</span>
+                <span class="btn-text">Today</span>
+                <span class="btn-count" id="todayCount">-</span>
+            </button>
+            <button id="h24Btn" class="time-range-btn" data-range="24h">
+                <span class="material-icons">schedule</span>
+                <span class="btn-text">24h</span>
+                <span class="btn-count" id="h24Count">-</span>
+            </button>
+            <button id="h48Btn" class="time-range-btn" data-range="48h">
+                <span class="material-icons">history</span>
+                <span class="btn-text">48h</span>
+                <span class="btn-count" id="h48Count">-</span>
+            </button>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 16px; margin-left: 24px;">
+            <span id="refreshBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Refresh">refresh</span>
+            <span id="settingsBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Settings & Filters">settings</span>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #0f9d58; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;">P</div>
+        </div>
+    </header>
+    
+    <!-- Main Layout -->
+    <div class="gmail-main">
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header">
+                <button class="back-btn" onclick="closeDetail()">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Feed
+                </button>
+                <div class="detail-actions">
+                    <button class="action-btn" title="Open in new tab" onclick="openInNewTab()">
+                        <span class="material-icons">open_in_new</span>
+                    </button>
+                    <button class="action-btn" title="Share">
+                        <span class="material-icons">share</span>
+                    </button>
+                </div>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="gmail-sidebar">
+            <button class="compose-btn" id="refreshFeedBtn">
+                <span class="material-icons">refresh</span>
+                Refresh Feed
+            </button>
+            
+            <nav>
+                <div class="nav-item active" data-filter="all">
+                    <span class="material-icons">inbox</span>
+                    <span>Unified Feed</span>
+                    <span class="feed-count" id="total-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="email">
+                    <span class="material-icons">mail</span>
+                    <span>Emails Only</span>
+                    <span class="feed-count" id="email-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="twitter">
+                    <span class="material-icons">tag</span>
+                    <span>Twitter Only</span>
+                    <span class="feed-count" id="twitter-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="financial">
+                    <span class="material-icons">attach_money</span>
+                    <span>Financial</span>
+                    <span class="feed-count" id="financial-count">0</span>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="feed-header">
+                <h1 class="feed-title">Unified Intelligence Feed</h1>
+                <div class="feed-stats" id="feedStats">
+                    <span>Loading...</span>
+                </div>
+            </div>
+            
+            <!-- Load Newer Button -->
+            <div class="load-button-container" id="loadNewerContainer" style="display: none;">
+                <button class="load-button load-newer" id="loadNewerBtn" onclick="manualLoadNewer()">
+                    <span class="material-icons">expand_less</span>
+                    <span>Load Newer Messages</span>
+                    <span class="load-count" id="newerCount">0</span>
+                </button>
+            </div>
+            
+            <!-- Feed Items -->
+            <div class="feed-list" id="feedList">
+                <div class="loading">
+                    <span class="material-icons">hourglass_empty</span>
+                    <p>Loading unified feed...</p>
+                </div>
+            </div>
+            
+            <!-- Load Older Button -->
+            <div class="load-button-container" id="loadOlderContainer" style="display: none;">
+                <button class="load-button load-older" id="loadOlderBtn" onclick="manualLoadOlder()">
+                    <span class="material-icons">expand_more</span>
+                    <span>Load Older Messages</span>
+                    <span class="load-count" id="olderCount">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ SAGE Settings & Filters</h3>
+                <span class="modal-close" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Filter Management Section -->
+                <div class="settings-section">
+                    <h4>🚫 Message Filters</h4>
+                    <p>Hide messages containing these words or expressions (case-insensitive):</p>
+                    
+                    <!-- Add Filter Form -->
+                    <div class="filter-add-form">
+                        <input type="text" id="filterInput" placeholder="Enter filter expression (e.g., @hotcars, spam, advertisement)" maxlength="100">
+                        <button onclick="addFilter()" class="add-filter-btn">
+                            <span class="material-icons">add</span>
+                            Add Filter
+                        </button>
+                    </div>
+                    
+                    <!-- Filter List -->
+                    <div class="filter-list" id="filterList">
+                        <div class="loading-filters">Loading filters...</div>
+                    </div>
+                    
+                    <!-- Filter Stats -->
+                    <div class="filter-stats" id="filterStats">
+                        <div class="stats-item">
+                            <span class="stat-label">Total Filters:</span>
+                            <span class="stat-value" id="totalFilters">-</span>
+                        </div>
+                        <div class="stats-item">
+                            <span class="stat-label">Messages Filtered:</span>
+                            <span class="stat-value" id="totalFiltered">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Settings Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #202124;
+            font-size: 18px;
+        }
+        
+        .modal-close {
+            font-size: 28px;
+            color: #5f6368;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-close:hover {
+            color: #202124;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .settings-section {
+            margin-bottom: 32px;
+        }
+        
+        .settings-section h4 {
+            margin: 0 0 8px 0;
+            color: #202124;
+            font-size: 16px;
+        }
+        
+        .settings-section p {
+            margin: 0 0 16px 0;
+            color: #5f6368;
+            font-size: 14px;
+        }
+        
+        .filter-add-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-add-form input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .filter-add-form input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        
+        .add-filter-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+        }
+        
+        .add-filter-btn:hover {
+            background: #1557b0;
+        }
+        
+        .add-filter-btn .material-icons {
+            font-size: 18px;
+        }
+        
+        .filter-list {
+            min-height: 100px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .filter-expression {
+            font-family: monospace;
+            background: #e8f0fe;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #1a73e8;
+            font-size: 13px;
+        }
+        
+        .filter-stats-inline {
+            color: #5f6368;
+            font-size: 12px;
+        }
+        
+        .filter-remove {
+            background: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .filter-remove:hover {
+            background: #d33b2c;
+        }
+        
+        .filter-stats {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 4px;
+            display: flex;
+            gap: 24px;
+        }
+        
+        .stats-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-label {
+            color: #5f6368;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            color: #202124;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .loading-filters {
+            text-align: center;
+            color: #5f6368;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        /* Time Range Controls */
+        .time-range-controls {
+            display: flex;
+            gap: 8px;
+            margin-left: 16px;
+        }
+        
+        .time-range-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #5f6368;
+            transition: all 0.2s ease;
+            min-width: 70px;
+            justify-content: center;
+        }
+        
+        .time-range-btn:hover {
+            background: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+        
+        .time-range-btn.active {
+            background: #1a73e8;
+            border-color: #1a73e8;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .time-range-btn.loading {
+            opacity: 0.6;
+            cursor: wait;
+        }
+        
+        .time-range-btn .material-icons {
+            font-size: 16px;
+        }
+        
+        .btn-text {
+            font-weight: 500;
+        }
+        
+        .btn-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .time-range-btn.active .btn-count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .time-range-btn:not(.active) .btn-count {
+            background: #e0e0e0;
+            color: #5f6368;
+        }
+        
+        /* Responsive adjustments for time range controls */
+        @media (max-width: 768px) {
+            .time-range-controls {
+                margin-left: 8px;
+                gap: 4px;
+            }
+            
+            .time-range-btn {
+                padding: 4px 8px;
+                min-width: 60px;
+                font-size: 12px;
+            }
+            
+            .time-range-btn .material-icons {
+                font-size: 14px;
+            }
+            
+            .btn-count {
+                font-size: 10px;
+                padding: 1px 4px;
+            }
+        }
+        
+        /* Infinite Scroll Loading Indicators */
+        .infinite-scroll-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1da1f2;
+        }
+        
+        .infinite-scroll-loading:first-child {
+            top: 80px;
+        }
+        
+        .infinite-scroll-loading:last-child {
+            bottom: 20px;
+        }
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e1e5e9;
+            border-top: 2px solid #1da1f2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Manual Load Buttons */
+        .load-button-container {
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            margin: 8px 0;
+        }
+        
+        .load-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #1da1f2;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-family: 'Google Sans', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(29, 161, 242, 0.2);
+            min-width: 200px;
+            justify-content: center;
+        }
+        
+        .load-button:hover {
+            background: #1991da;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(29, 161, 242, 0.3);
+        }
+        
+        .load-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(29, 161, 242, 0.2);
+        }
+        
+        .load-button:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .load-button .material-icons {
+            font-size: 18px;
+        }
+        
+        .load-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .load-newer {
+            background: #34a853;
+        }
+        
+        .load-newer:hover {
+            background: #2d8f47;
+        }
+        
+        .load-older {
+            background: #ea4335;
+        }
+        
+        .load-older:hover {
+            background: #d23825;
+        }
+        
+        /* Loading state for buttons */
+        .load-button.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .load-button.loading .material-icons {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+    
+    <script>
+        // Global state
+        let currentFilter = 'all';
+        let allItems = [];
+        let refreshInterval;
+        let currentTimeRange = null;
+        let timeRangeCounts = {};
+        let isLoadingTimeRange = false;
+        
+        // Infinite scroll variables
+        let isLoadingNewer = false;
+        let isLoadingOlder = false;
+        let infiniteScrollEnabled = false; // Disabled - using manual buttons instead
+        const SCROLL_THRESHOLD = 200; // pixels from edge to trigger loading
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFeed();
+            setupEventListeners();
+            loadTimeRangeCounts();
+            
+            // Auto-refresh every 30 seconds
+            refreshInterval = setInterval(loadFeed, 30000);
+            
+            // Update counts every 2 minutes
+            setInterval(loadTimeRangeCounts, 120000);
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    displayFeed();
+                });
+            });
+            
+            // Refresh buttons
+            document.getElementById('refreshFeedBtn').addEventListener('click', refreshFeed);
+            document.getElementById('refreshBtn').addEventListener('click', refreshFeed);
+            
+            // Settings button
+            document.getElementById('settingsBtn').addEventListener('click', openSettingsModal);
+            
+            // Time range buttons
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const timeRange = this.dataset.range;
+                    loadTimeRange(timeRange);
+                });
+            });
+            
+            // Infinite scroll
+            window.addEventListener('scroll', throttle(checkScrollPosition, 100));
+            
+            // Search
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => filterBySearch(e.target.value), 300);
+            });
+        }
+        
+        // Load feed from API
+        async function loadFeed() {
+            try {
+                const response = await fetch('/api/feed?type=' + currentFilter);
+                const data = await response.json();
+                
+                if (data.success) {
+                    allItems = data.items;
+                    updateStats(data.stats);
+                    displayFeed();
+                }
+            } catch (error) {
+                console.error('Error loading feed:', error);
+                showError();
+            }
+        }
+        
+        // Refresh feed
+        async function refreshFeed() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.style.animation = 'spin 1s linear';
+            
+            try {
+                await fetch('/api/refresh');
+                await loadFeed();
+            } catch (error) {
+                console.error('Error refreshing feed:', error);
+            }
+            
+            refreshBtn.style.animation = '';
+        }
+        
+        // Update statistics
+        function updateStats(stats) {
+            document.getElementById('total-count').textContent = stats.total_count;
+            document.getElementById('twitter-count').textContent = stats.twitter_count;
+            document.getElementById('email-count').textContent = stats.email_count;
+            
+            // Calculate financial count
+            const financialCount = allItems.filter(item => 
+                item.tags.includes('financial') || item.is_financial
+            ).length;
+            document.getElementById('financial-count').textContent = financialCount;
+            
+            // Update header stats
+            document.getElementById('feedStats').innerHTML = `
+                <span>🐦 ${stats.twitter_count} Tweets</span>
+                <span>📧 ${stats.email_count} Emails</span>
+                <span>⏰ Updated: ${stats.last_update}</span>
+            `;
+        }
+        
+        // Display feed items
+        function displayFeed() {
+            const feedList = document.getElementById('feedList');
+            feedList.innerHTML = '';
+            
+            if (allItems.length === 0) {
+                feedList.innerHTML = '<div class="loading">No items to display</div>';
+                return;
+            }
+            
+            // Group items by time
+            const grouped = groupItemsByTime(allItems);
+            
+            // Display each group
+            for (const [groupName, items] of Object.entries(grouped)) {
+                if (items.length === 0) continue;
+                
+                // Add time separator
+                const separator = document.createElement('div');
+                separator.className = 'time-separator';
+                separator.textContent = groupName;
+                feedList.appendChild(separator);
+                
+                // Add items
+                items.forEach(item => {
+                    feedList.appendChild(createFeedItem(item));
+                });
+            }
+            
+            // Update load button visibility and counts
+            updateLoadButtonCounts();
+        }
+        
+        // Group items by time periods
+        function groupItemsByTime(items) {
+            const groups = {
+                'Last Hour': [],
+                '2-3 Hours Ago': [],
+                'Today': [],
+                'Yesterday': [],
+                'Older': []
+            };
+            
+            const now = new Date();
+            
+            items.forEach(item => {
+                const itemTime = new Date(item.timestamp);
+                const hoursAgo = (now - itemTime) / (1000 * 60 * 60);
+                
+                if (hoursAgo < 1) {
+                    groups['Last Hour'].push(item);
+                } else if (hoursAgo < 3) {
+                    groups['2-3 Hours Ago'].push(item);
+                } else if (hoursAgo < 24) {
+                    groups['Today'].push(item);
+                } else if (hoursAgo < 48) {
+                    groups['Yesterday'].push(item);
+                } else {
+                    groups['Older'].push(item);
+                }
+            });
+            
+            return groups;
+        }
+        
+        // Create feed item element
+        function createFeedItem(item) {
+            const div = document.createElement('div');
+            div.className = 'feed-item';
+            
+            // Icon
+            const iconClass = item.type === 'twitter' ? 'twitter' : 
+                             (item.is_financial ? 'financial' : 'email');
+            const iconSymbol = item.type === 'twitter' ? 'tag' : 'mail';
+            
+            // Build HTML
+            div.innerHTML = `
+                <div class="feed-icon ${iconClass}">
+                    <span class="material-icons">${iconSymbol}</span>
+                </div>
+                <div class="feed-content">
+                    <div class="feed-meta">
+                        <span class="feed-author">${item.type === 'twitter' ? item.author : item.sender_name}</span>
+                        <span class="feed-source">• ${item.type === 'twitter' ? 'Twitter' : 'Email'}</span>
+                        <span class="feed-time">${item.time_display}</span>
+                    </div>
+                    <div class="feed-subject">${item.type === 'twitter' ? item.content.split('\n')[0] : item.subject}</div>
+                    <div class="feed-preview">${item.type === 'twitter' ? 
+                        (item.content.length > 100 ? item.content.substring(100) : '') : 
+                        item.content}</div>
+                    ${item.tags.length > 0 ? `
+                        <div class="feed-tags">
+                            ${item.tags.map(tag => `<span class="tag ${tag}">${formatTag(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${item.type === 'twitter' && item.engagement ? `
+                        <div class="engagement">
+                            <div class="engagement-item">
+                                <span class="material-icons">favorite</span>
+                                <span>${item.engagement.likes}</span>
+                            </div>
+                            <div class="engagement-item">
+                                <span class="material-icons">repeat</span>
+                                <span>${item.engagement.retweets}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Click handler
+            div.addEventListener('click', () => {
+                if (item.type === 'twitter') {
+                    openTweetDetail(item.tweet_id);
+                } else {
+                    openEmailDetail(item.id.replace('email_', ''));
+                }
+            });
+            
+            return div;
+        }
+        
+        // Format tag display
+        function formatTag(tag) {
+            const tagMap = {
+                'dovish': '🕊️ DOVISH',
+                'hawkish': '🦅 HAWKISH',
+                'breaking': '⚡ BREAKING',
+                'high-impact': '🔥 HIGH IMPACT',
+                'fed-policy': 'Fed Policy',
+                'ecb': 'ECB',
+                'inflation': 'Inflation',
+                'employment': 'Employment',
+                'financial': '💰 Financial'
+            };
+            return tagMap[tag] || tag.toUpperCase();
+        }
+        
+        // Filter by search
+        function filterBySearch(query) {
+            if (!query) {
+                displayFeed();
+                return;
+            }
+            
+            const filtered = allItems.filter(item => {
+                const searchText = `${item.type === 'twitter' ? item.author + ' ' + item.content : 
+                                   item.sender_name + ' ' + item.subject + ' ' + item.content}`.toLowerCase();
+                return searchText.includes(query.toLowerCase());
+            });
+            
+            // Display filtered items
+            const feedList = document.getElementById('feedList');
+            feedList.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                feedList.innerHTML = '<div class="loading">No items match your search</div>';
+                return;
+            }
+            
+            filtered.forEach(item => {
+                feedList.appendChild(createFeedItem(item));
+            });
+        }
+        
+        // Show error state
+        function showError() {
+            document.getElementById('feedList').innerHTML = `
+                <div class="loading">
+                    <span class="material-icons">error_outline</span>
+                    <p>Error loading feed. Please try again.</p>
+                </div>
+            `;
+        }
+        
+        // Detail view functions
+        let currentDetailItem = null;
+        
+        async function openEmailDetail(emailId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading email...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/email/${emailId}`);
+                const email = await response.json();
+                
+                if (email.error) {
+                    throw new Error(email.error);
+                }
+                
+                currentDetailItem = { type: 'email', data: email };
+                
+                // Render email detail
+                content.innerHTML = `
+                    <h1 class="detail-subject">${email.subject}</h1>
+                    
+                    <div class="detail-meta">
+                        <div class="sender-avatar">
+                            ${(email.sender_name || email.sender)[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${email.sender_name || email.sender}</div>
+                            <div class="sender-email">&lt;${email.sender}&gt;</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${email.date_display}</div>
+                            ${email.cc ? `<div>CC: ${email.cc}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body">
+                        ${email.content_type === 'html' ? 
+                            `<div class="html-content">${email.rendered_content}</div>` : 
+                            `<pre>${email.content}</pre>`
+                        }
+                    </div>
+                    
+                    ${email.attachments && email.attachments.length > 0 ? `
+                        <div class="attachments-section">
+                            <h3>📎 Attachments (${email.attachments.length})</h3>
+                            ${email.attachments.map(att => `
+                                <div class="attachment-item">
+                                    <span class="material-icons">attach_file</span>
+                                    <span>${att.filename}</span>
+                                    <span style="margin-left: auto; color: #5f6368; font-size: 12px;">
+                                        ${formatFileSize(att.size)}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${email.extracted_links && email.extracted_links.length > 0 ? `
+                        <div class="links-section">
+                            <h3>🔗 Links (${email.extracted_links.length})</h3>
+                            <ul>
+                                ${email.extracted_links.map(link => 
+                                    `<li><a href="${link}" target="_blank">${link}</a></li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        async function openTweetDetail(tweetId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading tweet...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/tweet/${tweetId}`);
+                const tweet = await response.json();
+                
+                if (tweet.error) {
+                    throw new Error(tweet.error);
+                }
+                
+                currentDetailItem = { type: 'tweet', data: tweet };
+                
+                // Render tweet detail
+                content.innerHTML = `
+                    <div class="detail-meta">
+                        <div class="sender-avatar" style="background: #1da1f2;">
+                            ${tweet.author_username[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${tweet.author}</div>
+                            <div class="sender-email">Twitter</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${tweet.date_display}</div>
+                            <div><a href="${tweet.url}" target="_blank" style="color: #1da1f2;">View on Twitter</a></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body" style="font-size: 18px; line-height: 1.6; margin: 24px 0;">
+                        ${tweet.content}
+                    </div>
+                    
+                    <div class="engagement-detail">
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.likes}</span>
+                            <span class="engagement-label">Likes</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.retweets}</span>
+                            <span class="engagement-label">Retweets</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.replies}</span>
+                            <span class="engagement-label">Replies</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.quotes}</span>
+                            <span class="engagement-label">Quotes</span>
+                        </div>
+                    </div>
+                    
+                    ${tweet.analysis && Object.keys(tweet.analysis).length > 0 ? `
+                        <div class="tweet-analysis">
+                            <h3>🧠 AI Analysis</h3>
+                            ${tweet.analysis.monetary ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Monetary Policy:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.monetary.label.toLowerCase()}">
+                                            ${tweet.analysis.monetary.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.monetary.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.growth ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Sentiment:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.growth.label.toLowerCase()}">
+                                            ${tweet.analysis.growth.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.growth.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.impact ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Impact:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge" style="background: ${tweet.analysis.impact.score > 0.6 ? '#fce8e6' : '#f8f9fa'}; color: ${tweet.analysis.impact.score > 0.6 ? '#d93025' : '#5f6368'};">
+                                            ${tweet.analysis.impact.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.impact.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.confidence > 0 ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Confidence:</span>
+                                    <span style="color: #5f6368;">${(tweet.confidence * 100).toFixed(0)}%</span>
+                                </div>
+                            ` : ''}
+                            ${tweet.reasoning ? `
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                                    <strong>Analysis Reasoning:</strong>
+                                    <p style="margin-top: 8px; color: #5f6368; font-size: 13px;">${tweet.reasoning}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('open');
+            currentDetailItem = null;
+        }
+        
+        function openInNewTab() {
+            if (currentDetailItem) {
+                if (currentDetailItem.type === 'tweet' && currentDetailItem.data.url) {
+                    window.open(currentDetailItem.data.url, '_blank');
+                }
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // === FILTER MANAGEMENT FUNCTIONS ===
+        
+        async function openSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'flex';
+            await loadFilters();
+        }
+        
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        
+        async function loadFilters() {
+            try {
+                const response = await fetch('/api/filters');
+                const data = await response.json();
+                
+                displayFilters(data.filters);
+                updateFilterStats(data.stats);
+                
+            } catch (error) {
+                console.error('Error loading filters:', error);
+                document.getElementById('filterList').innerHTML = 
+                    '<div style="color: #ea4335; text-align: center; padding: 20px;">Error loading filters</div>';
+            }
+        }
+        
+        function displayFilters(filters) {
+            const filterList = document.getElementById('filterList');
+            
+            if (!filters || filters.length === 0) {
+                filterList.innerHTML = '<div class="loading-filters">No filters added yet. Add your first filter above.</div>';
+                return;
+            }
+            
+            filterList.innerHTML = filters.map(filter => `
+                <div class="filter-item">
+                    <div>
+                        <span class="filter-expression">${escapeHtml(filter.expression)}</span>
+                        <span class="filter-stats-inline">(${filter.match_count} matches)</span>
+                    </div>
+                    <button class="filter-remove" onclick="removeFilter(${filter.id})">
+                        Remove
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        function updateFilterStats(stats) {
+            document.getElementById('totalFilters').textContent = stats.total_filters || 0;
+            document.getElementById('totalFiltered').textContent = stats.total_matches || 0;
+        }
+        
+        async function addFilter() {
+            const input = document.getElementById('filterInput');
+            const expression = input.value.trim();
+            
+            if (!expression) {
+                alert('Please enter a filter expression');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/filters', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ expression: expression })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    input.value = '';
+                    await loadFilters();
+                    showFilterMessage(result.message, 'success');
+                } else {
+                    showFilterMessage(result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error adding filter:', error);
+                showFilterMessage('Error adding filter', 'error');
+            }
+        }
+        
+        async function removeFilter(filterId) {
+            if (!confirm('Remove this filter?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/filters/${filterId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadFilters();
+                    showFilterMessage(result.message, 'success');
+                } else {
+                    showFilterMessage(result.error, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error removing filter:', error);
+                showFilterMessage('Error removing filter', 'error');
+            }
+        }
+        
+        function showFilterMessage(message, type) {
+            // Create or update message element
+            let messageEl = document.getElementById('filterMessage');
+            if (!messageEl) {
+                messageEl = document.createElement('div');
+                messageEl.id = 'filterMessage';
+                document.querySelector('.filter-add-form').appendChild(messageEl);
+            }
+            
+            messageEl.style.marginTop = '8px';
+            messageEl.style.padding = '8px 12px';
+            messageEl.style.borderRadius = '4px';
+            messageEl.style.fontSize = '14px';
+            
+            if (type === 'success') {
+                messageEl.style.background = '#e8f5e8';
+                messageEl.style.color = '#137333';
+                messageEl.style.border = '1px solid #34a853';
+            } else {
+                messageEl.style.background = '#fce8e6';
+                messageEl.style.color = '#d93025';
+                messageEl.style.border = '1px solid #ea4335';
+            }
+            
+            messageEl.textContent = message;
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 3000);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Add Enter key support for filter input
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for DOM to be ready, then add event listener
+            setTimeout(() => {
+                const filterInput = document.getElementById('filterInput');
+                if (filterInput) {
+                    filterInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            addFilter();
+                        }
+                    });
+                }
+            }, 100);
+        });
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('settingsModal');
+            if (e.target === modal) {
+                closeSettingsModal();
+            }
+        });
+        
+        // === TIME RANGE FUNCTIONS ===
+        
+        async function loadTimeRangeCounts() {
+            try {
+                const response = await fetch('/api/feed/counts');
+                const data = await response.json();
+                
+                if (data.success) {
+                    timeRangeCounts = data.counts;
+                    updateTimeRangeButtons();
+                }
+            } catch (error) {
+                console.error('Error loading time range counts:', error);
+            }
+        }
+        
+        function updateTimeRangeButtons() {
+            const buttons = [
+                { id: 'todayCount', range: 'today' },
+                { id: 'h24Count', range: '24h' },
+                { id: 'h48Count', range: '48h' }
+            ];
+            
+            buttons.forEach(btn => {
+                const countEl = document.getElementById(btn.id);
+                const count = timeRangeCounts[btn.range]?.total || 0;
+                countEl.textContent = count;
+            });
+        }
+        
+        async function loadTimeRange(timeRange) {
+            if (isLoadingTimeRange) return;
+            
+            try {
+                isLoadingTimeRange = true;
+                
+                // Update button states
+                document.querySelectorAll('.time-range-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.range === timeRange) {
+                        btn.classList.add('active', 'loading');
+                    }
+                });
+                
+                // Show loading in feed
+                const feedList = document.getElementById('feedList');
+                feedList.innerHTML = `
+                    <div class="loading">
+                        <span class="material-icons">hourglass_empty</span>
+                        <p>Loading ${timeRange} messages...</p>
+                    </div>
+                `;
+                
+                // Fetch time range data
+                const response = await fetch(`/api/feed/timerange/${timeRange}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Add new items to existing feed (as requested - "add to existing feed")
+                    const newItems = data.items.filter(newItem => {
+                        // Create unique identifier for each message type
+                        const newItemId = newItem.type === 'twitter' ? 
+                            `twitter_${newItem.tweet_id || newItem.id}` : 
+                            `email_${newItem.message_id || newItem.id}`;
+                        
+                        return !allItems.some(existingItem => {
+                            const existingItemId = existingItem.type === 'twitter' ? 
+                                `twitter_${existingItem.tweet_id || existingItem.id}` : 
+                                `email_${existingItem.message_id || existingItem.id}`;
+                            return existingItemId === newItemId;
+                        });
+                    });
+                    
+                    // Add new items to the beginning of allItems
+                    allItems = [...newItems, ...allItems];
+                    currentTimeRange = timeRange;
+                    
+                    // Display updated feed
+                    displayFeed();
+                    
+                    // Show success message and debug info
+                    const totalNew = newItems.length;
+                    const totalItems = data.items.length;
+                    const previousCount = allItems.length - totalNew;
+                    
+                    console.log(`Time range debug: ${timeRange} returned ${totalItems} items, ${totalNew} were new, ${previousCount} already existed`);
+                    
+                    showTimeRangeMessage(`Loaded ${totalNew} new messages from ${data.stats.time_range_label} (${totalItems} total in range)`, 'success');
+                    
+                } else {
+                    throw new Error(data.error || 'Failed to load time range');
+                }
+                
+            } catch (error) {
+                console.error('Error loading time range:', error);
+                showTimeRangeMessage(`Error loading ${timeRange} messages: ${error.message}`, 'error');
+                
+                // Reload regular feed
+                loadFeed();
+                
+            } finally {
+                isLoadingTimeRange = false;
+                
+                // Remove loading state from buttons
+                document.querySelectorAll('.time-range-btn').forEach(btn => {
+                    btn.classList.remove('loading');
+                });
+            }
+        }
+        
+        function showTimeRangeMessage(message, type) {
+            // Create or update message element
+            let messageEl = document.getElementById('timeRangeMessage');
+            if (!messageEl) {
+                messageEl = document.createElement('div');
+                messageEl.id = 'timeRangeMessage';
+                messageEl.style.position = 'fixed';
+                messageEl.style.top = '80px';
+                messageEl.style.left = '50%';
+                messageEl.style.transform = 'translateX(-50%)';
+                messageEl.style.zIndex = '1001';
+                messageEl.style.padding = '12px 20px';
+                messageEl.style.borderRadius = '6px';
+                messageEl.style.fontSize = '14px';
+                messageEl.style.fontWeight = '500';
+                messageEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                document.body.appendChild(messageEl);
+            }
+            
+            if (type === 'success') {
+                messageEl.style.background = '#e8f5e8';
+                messageEl.style.color = '#137333';
+                messageEl.style.border = '1px solid #34a853';
+            } else {
+                messageEl.style.background = '#fce8e6';
+                messageEl.style.color = '#d93025';
+                messageEl.style.border = '1px solid #ea4335';
+            }
+            
+            messageEl.textContent = message;
+            messageEl.style.display = 'block';
+            
+            // Auto-hide after 4 seconds
+            setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.style.display = 'none';
+                }
+            }, 4000);
+        }
+        
+        function resetTimeRange() {
+            currentTimeRange = null;
+            document.querySelectorAll('.time-range-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+        
+        // === INFINITE SCROLL FUNCTIONALITY ===
+        
+        // Throttle function to limit scroll event frequency
+        function throttle(func, limit) {
+            let inThrottle;
+            return function() {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
+        
+        // Check scroll position and trigger loading if needed
+        function checkScrollPosition() {
+            if (!infiniteScrollEnabled || isLoadingNewer || isLoadingOlder) {
+                return;
+            }
+            
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = window.innerHeight;
+            
+            // Check for scroll up (load newer messages)
+            if (scrollTop <= SCROLL_THRESHOLD) {
+                loadNewerMessages();
+            }
+            
+            // Check for scroll down (load older messages)
+            if (scrollTop + clientHeight >= scrollHeight - SCROLL_THRESHOLD) {
+                loadOlderMessages();
+            }
+        }
+        
+        // Load newer messages (scroll up)
+        async function loadNewerMessages() {
+            if (isLoadingNewer || allItems.length === 0) return;
+            
+            isLoadingNewer = true;
+            showLoadingIndicator('top');
+            
+            try {
+                // Get timestamp of newest message
+                const newestItem = allItems[0];
+                const newestTimestamp = newestItem.timestamp;
+                
+                // Convert timestamp to ISO format
+                let isoTimestamp;
+                if (typeof newestTimestamp === 'string') {
+                    isoTimestamp = new Date(newestTimestamp).toISOString();
+                } else {
+                    isoTimestamp = newestTimestamp.toISOString();
+                }
+                
+                console.log(`🔼 Loading newer messages than: ${isoTimestamp}`);
+                
+                const response = await fetch(`/api/feed/newer-than/${encodeURIComponent(isoTimestamp)}`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    // Add new items to the beginning
+                    const oldScrollHeight = document.documentElement.scrollHeight;
+                    
+                    allItems = [...data.items, ...allItems];
+                    displayFeed();
+                    
+                    // Maintain scroll position
+                    const newScrollHeight = document.documentElement.scrollHeight;
+                    window.scrollTo(0, window.pageYOffset + (newScrollHeight - oldScrollHeight));
+                    
+                    showInfiniteScrollMessage(`📈 Loaded ${data.items.length} newer messages`, 'success');
+                } else {
+                    console.log('🔼 No newer messages available');
+                }
+                
+            } catch (error) {
+                console.error('Error loading newer messages:', error);
+                showInfiniteScrollMessage('❌ Error loading newer messages', 'error');
+            } finally {
+                isLoadingNewer = false;
+                hideLoadingIndicator('top');
+            }
+        }
+        
+        // Load older messages (scroll down)
+        async function loadOlderMessages() {
+            if (isLoadingOlder || allItems.length === 0) return;
+            
+            isLoadingOlder = true;
+            showLoadingIndicator('bottom');
+            
+            try {
+                // Get timestamp of oldest message
+                const oldestItem = allItems[allItems.length - 1];
+                const oldestTimestamp = oldestItem.timestamp;
+                
+                // Convert timestamp to ISO format
+                let isoTimestamp;
+                if (typeof oldestTimestamp === 'string') {
+                    isoTimestamp = new Date(oldestTimestamp).toISOString();
+                } else {
+                    isoTimestamp = oldestTimestamp.toISOString();
+                }
+                
+                console.log(`🔽 Loading older messages than: ${isoTimestamp}`);
+                
+                const response = await fetch(`/api/feed/older-than/${encodeURIComponent(isoTimestamp)}`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    // Add new items to the end
+                    allItems = [...allItems, ...data.items];
+                    displayFeed();
+                    
+                    showInfiniteScrollMessage(`📉 Loaded ${data.items.length} older messages`, 'success');
+                } else {
+                    console.log('🔽 No older messages available');
+                }
+                
+            } catch (error) {
+                console.error('Error loading older messages:', error);
+                showInfiniteScrollMessage('❌ Error loading older messages', 'error');
+            } finally {
+                isLoadingOlder = false;
+                hideLoadingIndicator('bottom');
+            }
+        }
+        
+        // Show loading indicator
+        function showLoadingIndicator(position) {
+            const indicator = document.createElement('div');
+            indicator.id = `loading-${position}`;
+            indicator.className = 'infinite-scroll-loading';
+            indicator.innerHTML = `
+                <div class="loading-spinner"></div>
+                <span>Loading ${position === 'top' ? 'newer' : 'older'} messages...</span>
+            `;
+            
+            if (position === 'top') {
+                document.body.insertBefore(indicator, document.body.firstChild);
+            } else {
+                document.body.appendChild(indicator);
+            }
+        }
+        
+        // Hide loading indicator
+        function hideLoadingIndicator(position) {
+            const indicator = document.getElementById(`loading-${position}`);
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+        
+        // Show infinite scroll message
+        function showInfiniteScrollMessage(message, type) {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'infinite-scroll-message';
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transition: all 0.3s ease;
+            `;
+            
+            if (type === 'success') {
+                messageEl.style.background = '#e8f5e8';
+                messageEl.style.color = '#137333';
+                messageEl.style.border = '1px solid #34a853';
+            } else {
+                messageEl.style.background = '#fce8e6';
+                messageEl.style.color = '#d93025';
+                messageEl.style.border = '1px solid #ea4335';
+            }
+            
+            messageEl.textContent = message;
+            document.body.appendChild(messageEl);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 3000);
+        }
+        
+        // === MANUAL LOAD BUTTONS ===
+        
+        // Manual load newer messages
+        async function manualLoadNewer() {
+            if (isLoadingNewer || allItems.length === 0) return;
+            
+            const btn = document.getElementById('loadNewerBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // Get timestamp of newest message
+                const newestItem = allItems[0];
+                const newestTimestamp = newestItem.timestamp;
+                
+                // Convert timestamp to ISO format
+                let isoTimestamp;
+                if (typeof newestTimestamp === 'string') {
+                    isoTimestamp = new Date(newestTimestamp).toISOString();
+                } else {
+                    isoTimestamp = newestTimestamp.toISOString();
+                }
+                
+                console.log(`🔼 Manual load: newer than ${isoTimestamp}`);
+                
+                const response = await fetch(`/api/feed/newer-than/${encodeURIComponent(isoTimestamp)}`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    // Add new items to the beginning
+                    allItems = [...data.items, ...allItems];
+                    displayFeed();
+                    
+                    showInfiniteScrollMessage(`✅ Loaded ${data.items.length} newer messages`, 'success');
+                    updateLoadButtonCounts();
+                } else {
+                    showInfiniteScrollMessage('ℹ️ No newer messages available', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error loading newer messages:', error);
+                showInfiniteScrollMessage('❌ Error loading newer messages', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // Manual load older messages
+        async function manualLoadOlder() {
+            if (isLoadingOlder || allItems.length === 0) return;
+            
+            const btn = document.getElementById('loadOlderBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // Get timestamp of oldest message
+                const oldestItem = allItems[allItems.length - 1];
+                const oldestTimestamp = oldestItem.timestamp;
+                
+                // Convert timestamp to ISO format
+                let isoTimestamp;
+                if (typeof oldestTimestamp === 'string') {
+                    isoTimestamp = new Date(oldestTimestamp).toISOString();
+                } else {
+                    isoTimestamp = oldestTimestamp.toISOString();
+                }
+                
+                console.log(`🔽 Manual load: older than ${isoTimestamp}`);
+                
+                const response = await fetch(`/api/feed/older-than/${encodeURIComponent(isoTimestamp)}`);
+                const data = await response.json();
+                
+                if (data.success && data.items.length > 0) {
+                    // Add new items to the end
+                    allItems = [...allItems, ...data.items];
+                    displayFeed();
+                    
+                    showInfiniteScrollMessage(`✅ Loaded ${data.items.length} older messages`, 'success');
+                    updateLoadButtonCounts();
+                } else {
+                    showInfiniteScrollMessage('ℹ️ No older messages available', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error loading older messages:', error);
+                showInfiniteScrollMessage('❌ Error loading older messages', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // Update load button counts and visibility
+        function updateLoadButtonCounts() {
+            // Show buttons only if we have items
+            if (allItems.length > 0) {
+                document.getElementById('loadNewerContainer').style.display = 'block';
+                document.getElementById('loadOlderContainer').style.display = 'block';
+                
+                // For now, show placeholder counts (can be enhanced with API calls)
+                document.getElementById('newerCount').textContent = '?';
+                document.getElementById('olderCount').textContent = '?';
+            } else {
+                document.getElementById('loadNewerContainer').style.display = 'none';
+                document.getElementById('loadOlderContainer').style.display = 'none';
+            }
+        }
+        
+        // Enhanced infinite scroll message with info type
+        function showInfiniteScrollMessage(message, type) {
+            const messageEl = document.createElement('div');
+            messageEl.className = 'infinite-scroll-message';
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transition: all 0.3s ease;
+            `;
+            
+            if (type === 'success') {
+                messageEl.style.background = '#e8f5e8';
+                messageEl.style.color = '#137333';
+                messageEl.style.border = '1px solid #34a853';
+            } else if (type === 'info') {
+                messageEl.style.background = '#e3f2fd';
+                messageEl.style.color = '#1565c0';
+                messageEl.style.border = '1px solid #2196f3';
+            } else {
+                messageEl.style.background = '#fce8e6';
+                messageEl.style.color = '#d93025';
+                messageEl.style.border = '1px solid #ea4335';
+            }
+            
+            messageEl.textContent = message;
+            document.body.appendChild(messageEl);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (messageEl && messageEl.parentNode) {
+                    messageEl.remove();
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+

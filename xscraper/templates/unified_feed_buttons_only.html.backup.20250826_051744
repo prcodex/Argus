@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Unified Feed - Twitter + Email Intelligence</title>
+        <div style="display: flex; align-items: center; gap: 16px; margin-left: auto;">
+            <span id="refreshBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Refresh">refresh</span>
+            <span id="settingsBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Settings & Filters" onclick="openSettingsModal()">settings</span>
+        </div>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Google Sans', Arial, sans-serif;
+            background-color: #f1f3f4;
+            color: #202124;
+        }
+        
+        /* Gmail-like Header */
+        .gmail-header {
+            background: white;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .sage-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #0f9d58;
+        }
+        
+        .sage-logo .material-icons {
+            font-size: 28px;
+        }
+        
+        .search-box {
+            flex: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            height: 46px;
+            background: #f1f3f4;
+            border: none;
+            border-radius: 8px;
+            padding: 0 48px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        /* Main Layout */
+        .gmail-main {
+            display: flex;
+            margin-top: 64px;
+            height: calc(100vh - 64px);
+        }
+        
+        /* Sidebar */
+        .gmail-sidebar {
+            width: 256px;
+            background: white;
+            padding: 8px 0;
+            flex-shrink: 0;
+        }
+        
+        .compose-btn {
+            margin: 8px 8px 16px 8px;
+            height: 56px;
+            width: calc(100% - 16px);
+            background: #0f9d58;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 24px;
+            transition: all 0.2s;
+        }
+        
+        .compose-btn:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: #0b8043;
+        }
+        
+        .nav-item {
+            height: 32px;
+            padding: 0 26px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            cursor: pointer;
+            color: #202124;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: #f1f3f4;
+        }
+        
+        .nav-item.active {
+            background: #fce8e6;
+            color: #d93025;
+            font-weight: 500;
+        }
+        
+        .nav-item .material-icons {
+            font-size: 20px;
+        }
+        
+        .feed-count {
+            margin-left: auto;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            background: white;
+            margin: 16px 16px 16px 0;
+            border-radius: 8px;
+            overflow-y: auto;
+        }
+        
+        /* Feed Header */
+        .feed-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .feed-title {
+            font-size: 22px;
+            color: #202124;
+        }
+        
+        .feed-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        /* Feed Items */
+        .feed-list {
+            position: relative;
+        }
+        
+        .feed-item {
+            display: flex;
+            padding: 12px 24px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: all 0.1s;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .feed-item:hover {
+            box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 
+                        0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            z-index: 1;
+        }
+        
+        .feed-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .feed-icon.twitter {
+            background: #1da1f2;
+            color: white;
+        }
+        
+        .feed-icon.email {
+            background: #ea4335;
+            color: white;
+        }
+        
+        .feed-icon.financial {
+            background: #0f9d58;
+            color: white;
+        }
+        
+        .feed-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .feed-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .feed-author {
+            font-weight: 500;
+            color: #202124;
+            font-size: 14px;
+        }
+        
+        .feed-source {
+            color: #5f6368;
+            font-size: 12px;
+        }
+        
+        .feed-time {
+            margin-left: auto;
+            color: #5f6368;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .feed-subject {
+            font-size: 14px;
+            color: #202124;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-preview {
+            font-size: 14px;
+            color: #5f6368;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feed-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #f1f3f4;
+            color: #5f6368;
+        }
+        
+        .tag.dovish {
+            background: #e6f4ea;
+            color: #0d652d;
+        }
+        
+        .tag.hawkish {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .tag.breaking {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .tag.financial {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+        
+        /* Time separator */
+        .time-separator {
+            padding: 8px 24px;
+            background: #f8f9fa;
+            font-size: 12px;
+            color: #5f6368;
+            font-weight: 500;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #5f6368;
+        }
+        
+        .loading .material-icons {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Engagement metrics */
+        .engagement {
+            display: flex;
+            gap: 16px;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #5f6368;
+        }
+        
+        .engagement-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .engagement-item .material-icons {
+            font-size: 14px;
+        }
+        
+        /* Detail View Panel */
+        .detail-panel {
+            position: fixed;
+            top: 64px;
+            right: -600px;
+            width: 600px;
+            height: calc(100vh - 64px);
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 50;
+            overflow-y: auto;
+        }
+        
+        .detail-panel.open {
+            right: 0;
+        }
+        
+        .detail-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: #5f6368;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f1f3f4;
+        }
+        
+        .detail-content {
+            padding: 24px;
+        }
+        
+        .detail-subject {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .sender-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #0f9d58;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .sender-info {
+            flex: 1;
+        }
+        
+        .sender-name {
+            font-weight: 500;
+            color: #202124;
+        }
+        
+        .sender-email {
+            font-size: 13px;
+            color: #5f6368;
+        }
+        
+        .detail-body {
+            line-height: 1.6;
+            color: #202124;
+        }
+        
+        .detail-body pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+        }
+        
+        .html-content {
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .html-content img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .attachments-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f3f4;
+        }
+        
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .links-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f1f3f4;
+        }
+        
+        .links-section a {
+            color: #1967d2;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        
+        .links-section a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Tweet-specific styling */
+        .tweet-analysis {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .analysis-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-label {
+            font-weight: 500;
+        }
+        
+        .analysis-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .score-badge {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .score-badge.dovish {
+            background: #e6f4ea;
+            color: #0d652d;
+        }
+        
+        .score-badge.hawkish {
+            background: #fce8e6;
+            color: #d93025;
+        }
+        
+        .score-badge.bullish {
+            background: #e8f0fe;
+            color: #1967d2;
+        }
+        
+        .score-badge.bearish {
+            background: #fef7e0;
+            color: #ea8600;
+        }
+        
+        .engagement-detail {
+            display: flex;
+            gap: 24px;
+            margin: 16px 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .engagement-stat {
+            text-align: center;
+        }
+        
+        .engagement-number {
+            font-size: 24px;
+            font-weight: 500;
+            color: #202124;
+            display: block;
+        }
+        
+        .engagement-label {
+            font-size: 12px;
+            color: #5f6368;
+            text-transform: uppercase;
+        }
+        /* Manual Load Buttons */
+        .load-button-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 10px;
+        }
+        .load-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #1a73e8;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .load-button:hover {
+            background: #1557b0;
+            transform: translateY(-1px);
+        }
+        .load-newer { background: #34a853; }
+        .load-older { background: #ea4335; }
+        .load-count {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Gmail-like Header -->
+    <header class="gmail-header">
+        <div class="sage-logo">
+            <span class="material-icons">layers</span>
+            <span>SAGE Unified Feed</span>
+        <div style="display: flex; align-items: center; gap: 16px; margin-left: auto;">
+            <span id="refreshBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Refresh">refresh</span>
+            <span id="settingsBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Settings & Filters" onclick="openSettingsModal()">settings</span>
+        </div>
+        </div>
+        
+        <div class="search-box">
+            <span class="material-icons search-icon">search</span>
+            <input type="text" id="searchInput" placeholder="Search Twitter & Email intelligence...">
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 16px; margin-left: 24px;">
+            <span id="refreshBtn" class="material-icons" style="color: #5f6368; cursor: pointer;" title="Refresh">refresh</span>
+            <span class="material-icons" style="color: #5f6368; cursor: pointer;">settings</span>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #0f9d58; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer;">P</div>
+        </div>
+    </header>
+    
+    <!-- Main Layout -->
+    <div class="gmail-main">
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <div class="detail-header">
+                <button class="back-btn" onclick="closeDetail()">
+                    <span class="material-icons">arrow_back</span>
+                    Back to Feed
+                </button>
+                <div class="detail-actions">
+                    <button class="action-btn" title="Open in new tab" onclick="openInNewTab()">
+                        <span class="material-icons">open_in_new</span>
+                    </button>
+                    <button class="action-btn" title="Share">
+                        <span class="material-icons">share</span>
+                    </button>
+                </div>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <aside class="gmail-sidebar">
+            <button class="compose-btn" id="refreshFeedBtn">
+                <span class="material-icons">refresh</span>
+                Refresh Feed
+            </button>
+            
+            <nav>
+                <div class="nav-item active" data-filter="all">
+                    <span class="material-icons">inbox</span>
+                    <span>Unified Feed</span>
+                    <span class="feed-count" id="total-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="email">
+                    <span class="material-icons">mail</span>
+                    <span>Emails Only</span>
+                    <span class="feed-count" id="email-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="twitter">
+                    <span class="material-icons">tag</span>
+                    <span>Twitter Only</span>
+                    <span class="feed-count" id="twitter-count">0</span>
+                </div>
+                
+                <div class="nav-item" data-filter="financial">
+                    <span class="material-icons">attach_money</span>
+                    <span>Financial</span>
+                    <span class="feed-count" id="financial-count">0</span>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="feed-header">
+                <h1 class="feed-title">Unified Intelligence Feed</h1>
+                <div class="feed-stats" id="feedStats">
+                    <span>Loading...</span>
+                </div>
+            </div>
+            
+            <!-- Load Newer Button -->
+            <div class="load-button-container" id="loadNewerContainer" style="display: none;">
+                <button class="load-button load-newer" id="loadNewerBtn" onclick="manualLoadNewer()">
+                    <span class="material-icons">expand_less</span>
+                    <span>Load Newer Messages</span>
+                    <span class="load-count" id="newerCount">0</span>
+                </button>
+            </div>
+            <!-- Feed Items -->
+            <div class="feed-list" id="feedList">
+                <div class="loading">
+                    <span class="material-icons">hourglass_empty</span>
+                    <p>Loading unified feed...</p>
+                </div>
+            
+            <!-- Load Older Button -->
+            <div class="load-button-container" id="loadOlderContainer" style="display: none;">
+                <button class="load-button load-older" id="loadOlderBtn" onclick="manualLoadOlder()">
+                    <span class="material-icons">expand_more</span>
+                    <span>Load Older Messages</span>
+                    <span class="load-count" id="olderCount">0</span>
+                </button>
+            </div>
+            </div>
+            
+            <!-- Load Older Button -->
+            <div class="load-button-container" id="loadOlderContainer" style="display: none;">
+                <button class="load-button load-older" id="loadOlderBtn" onclick="manualLoadOlder()">
+                    <span class="material-icons">expand_more</span>
+                    <span>Load Older Messages</span>
+                    <span class="load-count" id="olderCount">0</span>
+                </button>
+            </div>
+        </div>
+            
+            <!-- Load Older Button -->
+            <div class="load-button-container" id="loadOlderContainer" style="display: none;">
+                <button class="load-button load-older" id="loadOlderBtn" onclick="manualLoadOlder()">
+                    <span class="material-icons">expand_more</span>
+                    <span>Load Older Messages</span>
+                    <span class="load-count" id="olderCount">0</span>
+                </button>
+            </div>
+    </div>
+            
+            <!-- Load Older Button -->
+            <div class="load-button-container" id="loadOlderContainer" style="display: none;">
+                <button class="load-button load-older" id="loadOlderBtn" onclick="manualLoadOlder()">
+                    <span class="material-icons">expand_more</span>
+                    <span>Load Older Messages</span>
+                    <span class="load-count" id="olderCount">0</span>
+                </button>
+            </div>
+    
+    <script>
+        // Global state
+        let currentFilter = 'all';
+        let allItems = [];
+        let refreshInterval;
+        let isLoadingNewer = false;
+        let isLoadingOlder = false;
+        
+        // Manual Load Functions
+        async function manualLoadNewer() {
+            if (isLoadingNewer) return;
+            isLoadingNewer = true;
+            
+            const btn = document.getElementById("loadNewerBtn");
+            btn.style.opacity = "0.6";
+            btn.disabled = true;
+            
+            try {
+                const newest = allItems[0];
+                if (!newest) return;
+                
+                const timestamp = newest.created_at || newest.timestamp;
+                const response = await fetch(`/api/feed/newer-than/${timestamp}`);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    allItems = [...data.items, ...allItems];
+                    displayFeed();
+                    updateLoadButtonCounts();
+                }
+            } catch (error) {
+                console.error("Load newer error:", error);
+            } finally {
+                isLoadingNewer = false;
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            }
+        }
+        
+        async function manualLoadOlder() {
+            if (isLoadingOlder) return;
+            isLoadingOlder = true;
+            
+            const btn = document.getElementById("loadOlderBtn");
+            btn.style.opacity = "0.6";
+            btn.disabled = true;
+            
+            try {
+                const oldest = allItems[allItems.length - 1];
+                if (!oldest) return;
+                
+                const timestamp = oldest.created_at || oldest.timestamp;
+                const response = await fetch(`/api/feed/older-than/${timestamp}`);
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    allItems = [...allItems, ...data.items];
+                    displayFeed();
+                    updateLoadButtonCounts();
+                }
+            } catch (error) {
+                console.error("Load older error:", error);
+            } finally {
+                isLoadingOlder = false;
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            }
+        }
+        
+        function updateLoadButtonCounts() {
+            const newerBtn = document.getElementById("loadNewerContainer");
+            const olderBtn = document.getElementById("loadOlderContainer");
+            
+            if (allItems.length > 0) {
+                newerBtn.style.display = "block";
+                olderBtn.style.display = "block";
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFeed();
+            setupEventListeners();
+            
+            // Auto-refresh every 30 seconds
+            refreshInterval = setInterval(loadFeed, 30000);
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    displayFeed();
+                });
+            });
+            
+            // Refresh buttons
+            document.getElementById('refreshFeedBtn').addEventListener('click', refreshFeed);
+            document.getElementById('refreshBtn').addEventListener('click', refreshFeed);
+            
+            // Search
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => filterBySearch(e.target.value), 300);
+            });
+        }
+        
+        // Load feed from API
+        async function loadFeed() {
+            try {
+                const response = await fetch('/api/feed?type=' + currentFilter);
+                const data = await response.json();
+                
+                if (data.success) {
+                    allItems = data.items;
+                    updateStats(data.stats);
+                    displayFeed();
+                }
+            } catch (error) {
+                console.error('Error loading feed:', error);
+                showError();
+            }
+        }
+        
+        // Refresh feed
+        async function refreshFeed() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.style.animation = 'spin 1s linear';
+            
+            try {
+                await fetch('/api/refresh');
+                await loadFeed();
+            } catch (error) {
+                console.error('Error refreshing feed:', error);
+            }
+            
+            refreshBtn.style.animation = '';
+        }
+        
+        // Update statistics
+        function updateStats(stats) {
+            document.getElementById('total-count').textContent = stats.total_count;
+            document.getElementById('twitter-count').textContent = stats.twitter_count;
+            document.getElementById('email-count').textContent = stats.email_count;
+            
+            // Calculate financial count
+            const financialCount = allItems.filter(item => 
+                item.tags.includes('financial') || item.is_financial
+            ).length;
+            document.getElementById('financial-count').textContent = financialCount;
+            
+            // Update header stats
+            document.getElementById('feedStats').innerHTML = `
+                <span>🐦 ${stats.twitter_count} Tweets</span>
+                <span>📧 ${stats.email_count} Emails</span>
+                <span>⏰ Updated: ${stats.last_update}</span>
+            `;
+        }
+        
+        // Display feed items
+        function displayFeed() {
+            const feedList = document.getElementById('feedList');
+            feedList.innerHTML = '';
+            
+            if (allItems.length === 0) {
+                feedList.innerHTML = '<div class="loading">No items to display</div>';
+                return;
+                updateLoadButtonCounts();
+        }
+            
+            // Group items by time
+            const grouped = groupItemsByTime(allItems);
+            
+            // Display each group
+            for (const [groupName, items] of Object.entries(grouped)) {
+                if (items.length === 0) continue;
+                
+                // Add time separator
+                const separator = document.createElement('div');
+                separator.className = 'time-separator';
+                separator.textContent = groupName;
+                feedList.appendChild(separator);
+                
+                // Add items
+                items.forEach(item => {
+                    feedList.appendChild(createFeedItem(item));
+                });
+            }
+        }
+        
+        // Group items by time periods
+        function groupItemsByTime(items) {
+            const groups = {
+                'Last Hour': [],
+                '2-3 Hours Ago': [],
+                'Today': [],
+                'Yesterday': [],
+                'Older': []
+            };
+            
+            const now = new Date();
+            
+            items.forEach(item => {
+                const itemTime = new Date(item.timestamp);
+                const hoursAgo = (now - itemTime) / (1000 * 60 * 60);
+                
+                if (hoursAgo < 1) {
+                    groups['Last Hour'].push(item);
+                } else if (hoursAgo < 3) {
+                    groups['2-3 Hours Ago'].push(item);
+                } else if (hoursAgo < 24) {
+                    groups['Today'].push(item);
+                } else if (hoursAgo < 48) {
+                    groups['Yesterday'].push(item);
+                } else {
+                    groups['Older'].push(item);
+                }
+            });
+            
+            return groups;
+        }
+        
+        // Create feed item element
+        function createFeedItem(item) {
+            const div = document.createElement('div');
+            div.className = 'feed-item';
+            
+            // Icon
+            const iconClass = item.type === 'twitter' ? 'twitter' : 
+                             (item.is_financial ? 'financial' : 'email');
+            const iconSymbol = item.type === 'twitter' ? 'tag' : 'mail';
+            
+            // Build HTML
+            div.innerHTML = `
+                <div class="feed-icon ${iconClass}">
+                    <span class="material-icons">${iconSymbol}</span>
+                </div>
+                <div class="feed-content">
+                    <div class="feed-meta">
+                        <span class="feed-author">${item.type === 'twitter' ? item.author : item.sender_name}</span>
+                        <span class="feed-source">• ${item.type === 'twitter' ? 'Twitter' : 'Email'}</span>
+                        <span class="feed-time">${item.time_display}</span>
+                    </div>
+                    <div class="feed-subject">${item.type === 'twitter' ? item.content.split('\n')[0] : item.subject}</div>
+                    <div class="feed-preview">${item.type === 'twitter' ? 
+                        (item.content.length > 100 ? item.content.substring(100) : '') : 
+                        item.content}</div>
+                    ${item.tags.length > 0 ? `
+                        <div class="feed-tags">
+                            ${item.tags.map(tag => `<span class="tag ${tag}">${formatTag(tag)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${item.type === 'twitter' && item.engagement ? `
+                        <div class="engagement">
+                            <div class="engagement-item">
+                                <span class="material-icons">favorite</span>
+                                <span>${item.engagement.likes}</span>
+                            </div>
+                            <div class="engagement-item">
+                                <span class="material-icons">repeat</span>
+                                <span>${item.engagement.retweets}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Click handler
+            div.addEventListener('click', () => {
+                if (item.type === 'twitter') {
+                    openTweetDetail(item.tweet_id);
+                } else {
+                    openEmailDetail(item.id.replace('email_', ''));
+                }
+            });
+            
+            return div;
+        }
+        
+        // Format tag display
+        function formatTag(tag) {
+            const tagMap = {
+                'dovish': '🕊️ DOVISH',
+                'hawkish': '🦅 HAWKISH',
+                'breaking': '⚡ BREAKING',
+                'high-impact': '🔥 HIGH IMPACT',
+                'fed-policy': 'Fed Policy',
+                'ecb': 'ECB',
+                'inflation': 'Inflation',
+                'employment': 'Employment',
+                'financial': '💰 Financial'
+            };
+            return tagMap[tag] || tag.toUpperCase();
+        }
+        
+        // Filter by search
+        function filterBySearch(query) {
+            if (!query) {
+                displayFeed();
+                return;
+            }
+            
+            const filtered = allItems.filter(item => {
+                const searchText = `${item.type === 'twitter' ? item.author + ' ' + item.content : 
+                                   item.sender_name + ' ' + item.subject + ' ' + item.content}`.toLowerCase();
+                return searchText.includes(query.toLowerCase());
+            });
+            
+            // Display filtered items
+            const feedList = document.getElementById('feedList');
+            feedList.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                feedList.innerHTML = '<div class="loading">No items match your search</div>';
+                return;
+            }
+            
+            filtered.forEach(item => {
+                feedList.appendChild(createFeedItem(item));
+            });
+        }
+        
+        // Show error state
+        function showError() {
+            document.getElementById('feedList').innerHTML = `
+                <div class="loading">
+                    <span class="material-icons">error_outline</span>
+                    <p>Error loading feed. Please try again.</p>
+                </div>
+            `;
+        }
+        
+        // Detail view functions
+        let currentDetailItem = null;
+        
+        async function openEmailDetail(emailId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading email...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/email/${emailId}`);
+                const email = await response.json();
+                
+                if (email.error) {
+                    throw new Error(email.error);
+                }
+                
+                currentDetailItem = { type: 'email', data: email };
+                
+                // Render email detail
+                content.innerHTML = `
+                    <h1 class="detail-subject">${email.subject}</h1>
+                    
+                    <div class="detail-meta">
+                        <div class="sender-avatar">
+                            ${(email.sender_name || email.sender)[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${email.sender_name || email.sender}</div>
+                            <div class="sender-email">&lt;${email.sender}&gt;</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${email.date_display}</div>
+                            ${email.cc ? `<div>CC: ${email.cc}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body">
+                        ${email.content_type === 'html' ? 
+                            `<div class="html-content">${email.rendered_content}</div>` : 
+                            `<pre>${email.content}</pre>`
+                        }
+                    </div>
+                    
+                    ${email.attachments && email.attachments.length > 0 ? `
+                        <div class="attachments-section">
+                            <h3>📎 Attachments (${email.attachments.length})</h3>
+                            ${email.attachments.map(att => `
+                                <div class="attachment-item">
+                                    <span class="material-icons">attach_file</span>
+                                    <span>${att.filename}</span>
+                                    <span style="margin-left: auto; color: #5f6368; font-size: 12px;">
+                                        ${formatFileSize(att.size)}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    
+                    ${email.extracted_links && email.extracted_links.length > 0 ? `
+                        <div class="links-section">
+                            <h3>🔗 Links (${email.extracted_links.length})</h3>
+                            <ul>
+                                ${email.extracted_links.map(link => 
+                                    `<li><a href="${link}" target="_blank">${link}</a></li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        async function openTweetDetail(tweetId) {
+            const panel = document.getElementById('detailPanel');
+            const content = document.getElementById('detailContent');
+            
+            // Show loading
+            content.innerHTML = '<div class="loading"><span class="material-icons">hourglass_empty</span><p>Loading tweet...</p></div>';
+            panel.classList.add('open');
+            
+            try {
+                const response = await fetch(`/api/tweet/${tweetId}`);
+                const tweet = await response.json();
+                
+                if (tweet.error) {
+                    throw new Error(tweet.error);
+                }
+                
+                currentDetailItem = { type: 'tweet', data: tweet };
+                
+                // Render tweet detail
+                content.innerHTML = `
+                    <div class="detail-meta">
+                        <div class="sender-avatar" style="background: #1da1f2;">
+                            ${tweet.author_username[0].toUpperCase()}
+                        </div>
+                        <div class="sender-info">
+                            <div class="sender-name">${tweet.author}</div>
+                            <div class="sender-email">Twitter</div>
+                        </div>
+                        <div style="margin-left: auto; text-align: right; color: #5f6368; font-size: 13px;">
+                            <div>${tweet.date_display}</div>
+                            <div><a href="${tweet.url}" target="_blank" style="color: #1da1f2;">View on Twitter</a></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-body" style="font-size: 18px; line-height: 1.6; margin: 24px 0;">
+                        ${tweet.content}
+                    </div>
+                    
+                    <div class="engagement-detail">
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.likes}</span>
+                            <span class="engagement-label">Likes</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.retweets}</span>
+                            <span class="engagement-label">Retweets</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.replies}</span>
+                            <span class="engagement-label">Replies</span>
+                        </div>
+                        <div class="engagement-stat">
+                            <span class="engagement-number">${tweet.engagement.quotes}</span>
+                            <span class="engagement-label">Quotes</span>
+                        </div>
+                    </div>
+                    
+                    ${tweet.analysis && Object.keys(tweet.analysis).length > 0 ? `
+                        <div class="tweet-analysis">
+                            <h3>🧠 AI Analysis</h3>
+                            ${tweet.analysis.monetary ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Monetary Policy:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.monetary.label.toLowerCase()}">
+                                            ${tweet.analysis.monetary.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.monetary.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.growth ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Sentiment:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge ${tweet.analysis.growth.label.toLowerCase()}">
+                                            ${tweet.analysis.growth.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.growth.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.analysis.impact ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Market Impact:</span>
+                                    <div class="analysis-value">
+                                        <span class="score-badge" style="background: ${tweet.analysis.impact.score > 0.6 ? '#fce8e6' : '#f8f9fa'}; color: ${tweet.analysis.impact.score > 0.6 ? '#d93025' : '#5f6368'};">
+                                            ${tweet.analysis.impact.label}
+                                        </span>
+                                        <span style="color: #5f6368; font-size: 12px;">
+                                            (${(tweet.analysis.impact.score * 100).toFixed(0)}%)
+                                        </span>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${tweet.confidence > 0 ? `
+                                <div class="analysis-item">
+                                    <span class="analysis-label">Confidence:</span>
+                                    <span style="color: #5f6368;">${(tweet.confidence * 100).toFixed(0)}%</span>
+                                </div>
+                            ` : ''}
+                            ${tweet.reasoning ? `
+                                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                                    <strong>Analysis Reasoning:</strong>
+                                    <p style="margin-top: 8px; color: #5f6368; font-size: 13px;">${tweet.reasoning}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading"><span class="material-icons">error</span><p>Error: ${error.message}</p></div>`;
+            }
+        }
+        
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('open');
+            currentDetailItem = null;
+        }
+        
+        function openInNewTab() {
+            if (currentDetailItem) {
+                if (currentDetailItem.type === 'tweet' && currentDetailItem.data.url) {
+                    window.open(currentDetailItem.data.url, '_blank');
+                }
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ SAGE Settings & Filters</h3>
+                <span class="modal-close" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="filter-section">
+                    <h4>🔍 Message Filters</h4>
+                    <p>Hide messages containing these words (case-insensitive):</p>
+                    <div class="filter-input-group">
+                        <input type="text" id="filterInput" placeholder="Enter word or phrase...">
+                        <button onclick="addFilter()">Add Filter</button>
+                    </div>
+                    <div id="filterList" class="filter-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

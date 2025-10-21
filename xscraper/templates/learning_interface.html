@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE Classification Learning Interface</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0f1c;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .nav-links a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        
+        .learning-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .tweet-learning-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tweet-content {
+            padding: 20px;
+            border-bottom: 1px solid #4b5563;
+        }
+        
+        .tweet-author {
+            font-weight: 600;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+        
+        .tweet-text {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            border-left: 4px solid #60a5fa;
+        }
+        
+        .classifications-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .model-predictions, .human-corrections {
+            background: #374151;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .model-predictions {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .human-corrections {
+            border-left: 4px solid #10b981;
+        }
+        
+        .classification-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+        }
+        
+        .classification-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #2d3748;
+            border-radius: 6px;
+        }
+        
+        .classification-label {
+            font-weight: 500;
+            min-width: 120px;
+        }
+        
+        .classification-value {
+            font-family: monospace;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .hawk-value { background: #dc2626; color: white; }
+        .dove-value { background: #16a34a; color: white; }
+        .bull-value { background: #0d9488; color: white; }
+        .bear-value { background: #b91c1c; color: white; }
+        .positive-value { background: #059669; color: white; }
+        .negative-value { background: #dc2626; color: white; }
+        .neutral-value { background: #6b7280; color: white; }
+        
+        .correction-form {
+            padding: 20px;
+            background: #2d3748;
+            border-top: 1px solid #4b5563;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            background: #374151;
+            color: #e0e6ed;
+        }
+        
+        .form-group input[type="range"] {
+            background: #4b5563;
+        }
+        
+        .range-display {
+            font-family: monospace;
+            font-weight: 600;
+            text-align: center;
+            padding: 4px 8px;
+            background: #4b5563;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        
+        .submit-correction {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        
+        .submit-correction:hover {
+            background: #059669;
+        }
+        
+        .model-reasoning {
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-style: italic;
+            border-left: 3px solid #6366f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 SAGE Classification Learning Interface</h1>
+        <p>Review Model Predictions • Apply Human Corrections • Continuous Learning</p>
+    </div>
+    
+    <div class="nav-links">
+        <a href="/">📊 Timeline</a>
+        <a href="/learning">🎓 Learning Interface</a>
+        <a href="/api/performance">📈 Performance</a>
+    </div>
+    
+    <div class="learning-container">
+        {% for tweet in tweets %}
+        <div class="tweet-learning-card">
+            <div class="tweet-content">
+                <div class="tweet-author">
+                    @{{ tweet.author }} • {{ tweet.created_at_et }}
+                </div>
+                <div class="tweet-text">{{ tweet.text }}</div>
+            </div>
+            
+            <div class="classifications-comparison">
+                <!-- Model Predictions -->
+                <div class="model-predictions classification-section">
+                    <h3>🤖 Model Predictions ({{ tweet.model.confidence | round(3) }} confidence)</h3>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Hawk/Dove:</span>
+                        {% set hd = tweet.model.hawk_dove %}
+                        <span class="classification-value {% if hd > 0.3 %}hawk-value{% elif hd < -0.3 %}dove-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(hd) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Bull/Bear:</span>
+                        {% set bb = tweet.model.bull_bear %}
+                        <span class="classification-value {% if bb > 0.3 %}bull-value{% elif bb < -0.3 %}bear-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(bb) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Sentiment:</span>
+                        {% set sent = tweet.model.sentiment %}
+                        <span class="classification-value {% if sent > 0.3 %}positive-value{% elif sent < -0.3 %}negative-value{% else %}neutral-value{% endif %}">
+                            {{ "%.2f"|format(sent) }}
+                        </span>
+                    </div>
+                    
+                    <div class="classification-row">
+                        <span class="classification-label">Market Impact:</span>
+                        <span class="classification-value neutral-value">{{ "%.2f"|format(tweet.model.market_impact) }}</span>
+                    </div>
+                    
+                    {% if tweet.model.reasoning %}
+                    <div class="model-reasoning">
+                        <strong>Reasoning:</strong> {{ tweet.model.reasoning }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Human Corrections -->
+                <div class="human-corrections classification-section">
+                    <h3>
+                        👤 Your Corrections
+                        {% if tweet.human_corrections %}
+                            <span style="color: #10b981; font-weight: normal;">(Applied ✓)</span>
+                        {% else %}
+                            <span style="color: #6b7280; font-weight: normal;">(No corrections yet)</span>
+                        {% endif %}
+                    </h3>
+                    
+                    {% if tweet.human_corrections %}
+                        <!-- Show applied corrections -->
+                        <div class="classification-row">
+                            <span class="classification-label">Hawk/Dove:</span>
+                            {% set hd = tweet.human_corrections.hawk_dove %}
+                            <span class="classification-value {% if hd > 0.3 %}hawk-value{% elif hd < -0.3 %}dove-value{% else %}neutral-value{% endif %}">
+                                {{ "%.2f"|format(hd) }}
+                            </span>
+                        </div>
+                        
+                        <div class="classification-row">
+                            <span class="classification-label">Bull/Bear:</span>
+                            {% set bb = tweet.human_corrections.bull_bear %}
+                            <span class="classification-value {% if bb > 0.3 %}bull-value{% elif bb < -0.3 %}bear-value{% else %}neutral-value{% endif %}">
+                                {{ "%.2f"|format(bb) }}
+                            </span>
+                        </div>
+                        
+                        <div class="classification-row">
+                            <span class="classification-label">Sentiment:</span>
+                            {% set sent = tweet.human_corrections.sentiment %}
+                            <span class="classification-value {% if sent > 0.3 %}positive-value{% elif sent < -0.3 %}negative-value{% else %}neutral-value{% endif %}">
+                                {{ "%.2f"|format(sent) }}
+                            </span>
+                        </div>
+                        
+                        <div class="classification-row">
+                            <span class="classification-label">Market Impact:</span>
+                            <span class="classification-value neutral-value">{{ "%.2f"|format(tweet.human_corrections.market_impact) }}</span>
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 0.9em;">
+                            <strong>Currently Active:</strong> 
+                            {% if tweet.active_source == 'human' %}
+                                <span style="color: #10b981;">Your corrections</span>
+                            {% else %}
+                                <span style="color: #3b82f6;">Model predictions</span>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Correction form -->
+                        <form onsubmit="submitCorrection(event, '{{ tweet.tweet_id }}')">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Hawk/Dove</label>
+                                    <input type="range" min="-1" max="1" step="0.1" 
+                                           value="{{ tweet.model.hawk_dove }}"
+                                           name="hawk_dove" id="hd-{{ tweet.tweet_id }}"
+                                           oninput="updateDisplay('hd-{{ tweet.tweet_id }}')">
+                                    <div class="range-display" id="hd-display-{{ tweet.tweet_id }}">{{ "%.1f"|format(tweet.model.hawk_dove) }}</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Bull/Bear</label>
+                                    <input type="range" min="-1" max="1" step="0.1"
+                                           value="{{ tweet.model.bull_bear }}"
+                                           name="bull_bear" id="bb-{{ tweet.tweet_id }}"
+                                           oninput="updateDisplay('bb-{{ tweet.tweet_id }}')">
+                                    <div class="range-display" id="bb-display-{{ tweet.tweet_id }}">{{ "%.1f"|format(tweet.model.bull_bear) }}</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Sentiment</label>
+                                    <input type="range" min="-1" max="1" step="0.1"
+                                           value="{{ tweet.model.sentiment }}"
+                                           name="sentiment" id="sent-{{ tweet.tweet_id }}"
+                                           oninput="updateDisplay('sent-{{ tweet.tweet_id }}')">
+                                    <div class="range-display" id="sent-display-{{ tweet.tweet_id }}">{{ "%.1f"|format(tweet.model.sentiment) }}</div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Market Impact</label>
+                                    <input type="range" min="0" max="1" step="0.1"
+                                           value="{{ tweet.model.market_impact }}"
+                                           name="market_impact" id="impact-{{ tweet.tweet_id }}"
+                                           oninput="updateDisplay('impact-{{ tweet.tweet_id }}')">
+                                    <div class="range-display" id="impact-display-{{ tweet.tweet_id }}">{{ "%.1f"|format(tweet.model.market_impact) }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Your Confidence (1-5)</label>
+                                <input type="range" min="1" max="5" step="1" value="3"
+                                       name="confidence" id="conf-{{ tweet.tweet_id }}"
+                                       oninput="updateDisplay('conf-{{ tweet.tweet_id }}')">
+                                <div class="range-display" id="conf-display-{{ tweet.tweet_id }}">3</div>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Notes (Optional)</label>
+                                <input type="text" name="notes" placeholder="Why did you disagree with the model?">
+                            </div>
+                            
+                            <button type="submit" class="submit-correction">
+                                🎓 Apply Correction & Train Model
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="tweet-learning-card">
+            <div class="tweet-content">
+                <h3>🎉 All classifications look good!</h3>
+                <p>No low-confidence predictions or corrections needed at the moment.</p>
+                <p>Check back after the next window processing cycle.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        function updateDisplay(inputId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(inputId.replace('-', '-display-'));
+            display.textContent = parseFloat(input.value).toFixed(1);
+            
+            // Update color based on value
+            const value = parseFloat(input.value);
+            if (inputId.includes('hd-')) {
+                display.className = value > 0.3 ? 'range-display hawk-value' : 
+                                  value < -0.3 ? 'range-display dove-value' : 'range-display neutral-value';
+            } else if (inputId.includes('bb-')) {
+                display.className = value > 0.3 ? 'range-display bull-value' : 
+                                  value < -0.3 ? 'range-display bear-value' : 'range-display neutral-value';
+            } else if (inputId.includes('sent-')) {
+                display.className = value > 0.3 ? 'range-display positive-value' : 
+                                  value < -0.3 ? 'range-display negative-value' : 'range-display neutral-value';
+            }
+        }
+        
+        async function submitCorrection(event, tweetId) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`/api/classify/${tweetId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Show success and reload the card
+                    form.innerHTML = '<div style="text-align: center; padding: 20px; color: #10b981;">✅ Correction applied successfully! Model is learning...</div>';
+                    
+                    // Reload page after short delay to show updated classifications
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    alert('Error applying correction: ' + result.message);
+                }
+            } catch (error) {
+                alert('Network error: ' + error.message);
+            }
+        }
+        
+        // Initialize displays
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="range"]').forEach(input => {
+                updateDisplay(input.id);
+            });
+        });
+    </script>
+</body>
+</html>
