@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🧪 Test - Allowed Senders Editor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; text-align: left; }
+        table td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        table tr:hover { background: #f8f9fa; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-small { padding: 6px 12px; font-size: 13px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 40px; border-radius: 15px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-group small { color: #666; font-size: 12px; }
+        .preview-box { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; margin: 20px 0; }
+        .preview-box pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 13px; overflow-x: auto; }
+        .btn-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 30px; }
+        .status { padding: 10px; border-radius: 6px; margin-bottom: 20px; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test - Allowed Senders Editor</h1>
+        <p style="color: #666;">Testing environment for email pattern management. Port 8544.</p>
+        
+        <div id="status-message"></div>
+        
+        <button class="btn btn-success" onclick="loadSenders()" style="margin-right: 10px;">🔄 Reload Data</button>
+        <button class="btn btn-primary" onclick="openAddModal()">➕ Add New Sender</button>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30%;">📧 Sender Tag</th>
+                    <th style="width: 40%;">📮 Email Pattern</th>
+                    <th style="width: 30%; text-align: center;">✏️ Actions</th>
+                </tr>
+            </thead>
+            <tbody id="senders-tbody">
+                <tr><td colspan="3" style="text-align: center; padding: 30px;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">✏️ Edit Allowed Sender</h2>
+            
+            <div class="form-group">
+                <label>📮 Email Address or Pattern:</label>
+                <input type="text" id="email-input" placeholder="e.g., *@bloomberg.com or specific@email.com">
+                <small>Use * for wildcards. Example: *@bloomberg.com matches all Bloomberg emails</small>
+            </div>
+            
+            <div class="form-group">
+                <label>🏷️ Sender Tag (Display Name):</label>
+                <input type="text" id="tag-input" placeholder="e.g., Bloomberg">
+                <small>Friendly name shown in the interface</small>
+            </div>
+            
+            <div class="form-group">
+                <label>📝 Description:</label>
+                <input type="text" id="desc-input" placeholder="e.g., Bloomberg Economics Newsletter">
+            </div>
+            
+            <div class="preview-box">
+                <strong>📋 JSON Preview:</strong>
+                <pre id="json-preview">{}</pre>
+            </div>
+            
+            <div class="btn-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteSender()" id="delete-btn" style="margin-right: auto;">🗑️ Delete</button>
+                <button class="btn btn-primary" onclick="saveSender()">💾 Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentSender = null;
+        let allSenders = [];
+        
+        // Load senders
+        function loadSenders() {
+            showStatus('Loading...', 'info');
+            
+            fetch('/api/allowed_senders_full')
+                .then(r => r.json())
+                .then(data => {
+                    allSenders = data.senders || [];
+                    renderTable();
+                    showStatus(`✅ Loaded ${allSenders.length} senders`, 'success');
+                })
+                .catch(e => {
+                    showStatus('❌ Error loading senders: ' + e, 'error');
+                });
+        }
+        
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('senders-tbody');
+            tbody.innerHTML = '';
+            
+            allSenders.forEach(sender => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${sender.sender_tag || 'Unknown'}</strong></td>
+                    <td><code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">${sender.email || 'N/A'}</code></td>
+                    <td style="text-align: center;">
+                        <button class="btn btn-primary btn-small" onclick='openEditModal(${JSON.stringify(sender).replace(/'/g, "&apos;")})'>
+                            ✏️ Edit
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Open edit modal
+        function openEditModal(sender) {
+            currentSender = sender;
+            document.getElementById('modal-title').textContent = '✏️ Edit Allowed Sender';
+            document.getElementById('email-input').value = sender.email || '';
+            document.getElementById('tag-input').value = sender.sender_tag || '';
+            document.getElementById('desc-input').value = sender.description || '';
+            document.getElementById('delete-btn').style.display = 'inline-block';
+            updatePreview();
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        
+        // Open add modal
+        function openAddModal() {
+            currentSender = null;
+            document.getElementById('modal-title').textContent = '➕ Add New Sender';
+            document.getElementById('email-input').value = '';
+            document.getElementById('tag-input').value = '';
+            document.getElementById('desc-input').value = '';
+            document.getElementById('delete-btn').style.display = 'none';
+            updatePreview();
+            document.getElementById('edit-modal').classList.add('active');
+        }
+        
+        // Close modal
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+            currentSender = null;
+        }
+        
+        // Update preview
+        function updatePreview() {
+            const preview = {
+                email: document.getElementById('email-input').value,
+                sender_tag: document.getElementById('tag-input').value,
+                description: document.getElementById('desc-input').value
+            };
+            document.getElementById('json-preview').textContent = JSON.stringify(preview, null, 2);
+        }
+        
+        // Save sender
+        async function saveSender() {
+            const email = document.getElementById('email-input').value;
+            const tag = document.getElementById('tag-input').value;
+            const desc = document.getElementById('desc-input').value;
+            
+            if (!email || !tag) {
+                alert('❌ Email and Sender Tag are required!');
+                return;
+            }
+            
+            const data = {
+                email: email,
+                sender_tag: tag,
+                description: desc,
+                old_email: currentSender ? currentSender.email : null
+            };
+            
+            try {
+                const response = await fetch('/api/update_allowed_sender', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✅ Sender ${currentSender ? 'updated' : 'added'} successfully!`, 'success');
+                    closeModal();
+                    loadSenders();
+                } else {
+                    showStatus('❌ Error: ' + result.error, 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error saving: ' + e, 'error');
+            }
+        }
+        
+        // Delete sender
+        async function deleteSender() {
+            if (!currentSender) return;
+            
+            if (!confirm(`Delete "${currentSender.sender_tag}"?\n\nEmail: ${currentSender.email}\n\nThis cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/delete_allowed_sender', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email: currentSender.email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ Sender deleted successfully!', 'success');
+                    closeModal();
+                    loadSenders();
+                } else {
+                    showStatus('❌ Error: ' + result.error, 'error');
+                }
+            } catch (e) {
+                showStatus('❌ Error deleting: ' + e, 'error');
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const div = document.getElementById('status-message');
+            div.className = 'status ' + type;
+            div.textContent = message;
+            div.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    div.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Add event listeners
+        ['email-input', 'tag-input', 'desc-input'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+        
+        // Load on start
+        loadSenders();
+    </script>
+</body>
+</html>

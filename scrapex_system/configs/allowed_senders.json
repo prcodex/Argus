@@ -1,0 +1,214 @@
+[
+  {
+    "email": "research@email.goldmansachs.com",
+    "sender_tag": "Goldman Sachs",
+    "description": "Goldman Sachs Research"
+  },
+  {
+    "email": "jan.hatzius@ny.email.gs.com",
+    "sender_tag": "Jan Hatzius",
+    "description": "Goldman Sachs Chief Economist"
+  },
+  {
+    "email": "noreply@news.bloomberg.com",
+    "sender_tag": "Bloomberg",
+    "description": "Bloomberg News"
+  },
+  {
+    "email": "newsletters@businessinsider.com",
+    "sender_tag": "Business Insider",
+    "description": "Business Insider Newsletters"
+  },
+  {
+    "email": "news-alerts@ft.com",
+    "sender_tag": "FT",
+    "description": "Financial Times"
+  },
+  {
+    "email": "macro.daily@db.com",
+    "sender_tag": "Itau",
+    "description": "Itau Macro Daily"
+  },
+  {
+    "email": "torsten.slok@apolloadvisors.com",
+    "sender_tag": "Torsten Slok",
+    "description": "Apollo Chief Economist"
+  },
+  {
+    "email": "access@interactive.wsj.com",
+    "sender_tag": "WSJ",
+    "description": "Wall Street Journal"
+  },
+  {
+    "email": "adamtooze@substack.com",
+    "sender_tag": "Adam Tooze",
+    "description": "Chartbook Newsletter"
+  },
+  {
+    "email": "subscriptions@rosenbergresearch.com",
+    "sender_tag": "Rosenberg Research",
+    "description": "David Rosenberg Economic Analysis"
+  },
+  {
+    "email": "noreply@mail.capitalflows.ai",
+    "sender_tag": "Capital Flows",
+    "description": "Capital Flows Analysis"
+  },
+  {
+    "email": "news@email.estadao.com.br",
+    "sender_tag": "Estad\u00e3o",
+    "description": "Estado de S.Paulo"
+  },
+  {
+    "email": "johnhcochrane@substack.com",
+    "sender_tag": "John Cochrane",
+    "description": "The Grumpy Economist"
+  },
+  {
+    "email": "thebarronsdaily@barrons.com",
+    "sender_tag": "Barons Daily",
+    "description": "Barron's Daily Newsletter"
+  },
+  {
+    "email": "tony.pasquariello@mail.marquee.gs.com",
+    "sender_tag": "Tony_GS",
+    "description": "Tony Pasquariello - Goldman Sachs"
+  },
+  {
+    "email": "FolhaMercado@newsletter.folha.com.br",
+    "sender_tag": "Folha",
+    "description": "Folha de S.Paulo Market Newsletter"
+  },
+  {
+    "email": "oddlots@bloomberg.net",
+    "sender_tag": "Odd Lots",
+    "description": "Bloomberg Odd Lots"
+  },
+  {
+    "email": "pribeirojr@me.com",
+    "sender_tag": "PRJ Research",
+    "description": "PRJ Research Documents"
+  },
+  {
+    "email": "george.cole@alerts.publishing.gs.com",
+    "sender_tag": "GS Rates Research",
+    "description": "Goldman Sachs Rates Research"
+  },
+  {
+    "email": "robinjbrooks@substack.com",
+    "sender_tag": "Shadow Price Macro",
+    "description": "Robin J Brooks Economic Analysis"
+  },
+  {
+    "email": "mohamedelerian@substack.com",
+    "tag": "El-Erian",
+    "display_name": "Mohamed El-Erian",
+    "description": "Mohamed A. El-Erian - Economic Commentary"
+  },
+  {
+    "email": "macrocharts@substack.com",
+    "tag": "Macro Charts",
+    "display_name": "Macro Charts",
+    "description": "Macro Charts - Visual Economic Analysis"
+  },
+  {
+    "email": "chartstorm@substack.com",
+    "tag": "ChartStorm",
+    "display_name": "ChartStorm",
+    "description": "Callum Thomas - Weekly S&P500 ChartStorm"
+  },
+  {
+    "email": "samro@substack.com",
+    "tag": "TKer",
+    "display_name": "TKer",
+    "description": "Sam Ro - TKer Market Analysis"
+  },
+  {
+    "email": "mattstoller@substack.com",
+    "tag": "Matt Stoller",
+    "display_name": "Matt Stoller",
+    "description": "Matt Stoller - BIG Newsletter"
+  },
+  {
+    "email": "topdowncharts+premium-content@substack.com",
+    "tag": "Topdown Charts",
+    "display_name": "Topdown Charts",
+    "description": "Topdown Charts - Premium Content"
+  },
+  {
+    "email": "no-reply@folhadespaulo.com.br",
+    "tag": "FolhaMercado",
+    "display_name": "FolhaMercado",
+    "description": "Folha de S.Paulo - Mercado"
+  },
+  {
+    "email": "agm@apollo.com",
+    "tag": "Torsten Slok",
+    "display_name": "Torsten Slok",
+    "description": "Torsten Slok - Apollo Chief Economist"
+  },
+  {
+    "email": "adamtooze+chartbook-top-links@substack.com",
+    "tag": "Adam Tooze",
+    "display_name": "Adam Tooze",
+    "description": "Adam Tooze - Chartbook"
+  },
+  {
+    "email": "newsletter@email.businessinsider.com",
+    "tag": "Business Insider",
+    "display_name": "Business Insider",
+    "description": "Business Insider Newsletter"
+  },
+  {
+    "email": "access@barrons.com",
+    "tag": "Barrons",
+    "display_name": "Barrons",
+    "description": "Barron's Daily Roundup"
+  },
+  {
+    "email": "themacrotourist+macrotourist-weekly-wrap-up@substack.com",
+    "tag": "MacroTourist",
+    "display_name": "MacroTourist",
+    "description": "Kevin Muir - The MacroTourist Weekly Wrap-Up"
+  },
+  {
+    "email": "macro@alerts.publishing.gs.com",
+    "tag": "GS Macro Markets",
+    "display_name": "GS Macro Markets Research",
+    "description": "Goldman Sachs Macro Markets Research"
+  },
+  {
+    "email": "newsletter@noticias.estadao.com.br",
+    "tag": "Estad\u00e3o",
+    "display_name": "Estad\u00e3o",
+    "description": "Estad\u00e3o News"
+  },
+  {
+    "email": "dailybriefing@thomsonreuters.com",
+    "tag": "Reuters",
+    "display_name": "Reuters Daily Briefing",
+    "description": "Reuters Daily Briefing"
+  },
+  {
+    "email": "macromornings@substack.com",
+    "tag": "Macro Mornings",
+    "display_name": "Macro Mornings",
+    "description": "Macro Mornings Newsletter"
+  },
+  {
+    "email": "pedro.ribeiro@rkocapmgt.com",
+    "tag": "PR_Forward",
+    "display_name": "PR Forward",
+    "description": "Pedro's work email - Itau research forwards"
+  },
+  {
+    "email": "email@washingtonpost.com",
+    "sender_tag": "Washington Post",
+    "description": "Washington Post News"
+  },
+  {
+    "email": "bestofecontwitter@substack.com",
+    "sender_tag": "Best of Econtwitter",
+    "description": "Economics Twitter Highlights"
+  }
+]
